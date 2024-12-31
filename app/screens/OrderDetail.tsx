@@ -43,6 +43,34 @@ const OrderDetailsScreen = () => {
       price: 45000,
       image: require("../../assets/images/example-item.png"),
     },
+    {
+      id: "5",
+      name: "Bánh Hotteok – bánh Pancake",
+      quantity: 2,
+      price: 45000,
+      image: require("../../assets/images/example-item.png"),
+    },
+    {
+      id: "6",
+      name: "Bánh Hotteok – bánh Pancake",
+      quantity: 2,
+      price: 45000,
+      image: require("../../assets/images/example-item.png"),
+    },
+    {
+      id: "7",
+      name: "Bánh Hotteok – bánh Pancake",
+      quantity: 2,
+      price: 45000,
+      image: require("../../assets/images/example-item.png"),
+    },
+    {
+      id: "8",
+      name: "Bánh Hotteok – bánh Pancake",
+      quantity: 2,
+      price: 45000,
+      image: require("../../assets/images/example-item.png"),
+    },
   ];
 
   const totalAmount = orderItems.reduce((sum, item) => sum + item.price, 0);
