@@ -14,6 +14,7 @@ export const authenticateGrabFood = async (
       client_secret: clientSecret,
       grant_type: "client_credentials",
     });
+    console.log("GrabFood authentication response:", response.data);
     return response.data.access_token;
   } catch (error) {
     console.error("Error authenticating with GrabFood:", error);

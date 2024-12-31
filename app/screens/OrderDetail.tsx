@@ -205,7 +205,7 @@ const OrderDetailsScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 16, margin: 8 },
   customerInfo: {
-    padding: 24,
+    padding: 16,
     borderBottomWidth: 1,
     borderColor: "#ccc",
   },
@@ -291,9 +291,11 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginVertical: 4,
     paddingVertical: 4,
     paddingHorizontal: 16,
+    height: 65,
   },
   confirmButton: {
     flex: 1,

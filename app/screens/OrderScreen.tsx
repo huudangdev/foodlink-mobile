@@ -15,90 +15,91 @@ import {
 import { Image } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { authenticateGrabFood, getGrabFoodOrders } from "../services/grabfood";
+import { useRoute } from "@react-navigation/native";
 
 const Order = () => {
-  // const [orders, setOrders] = useState([
-  //   {
-  //     id: "GF2047",
-  //     customer: "Nguyễn Cao Nam",
-  //     deliveryTime: "10:00",
-  //     platform: "ShopeeFood",
-  //     items: [
-  //       { name: "Bánh trung thu Songpyeon", price: 45000, quantity: 2 },
-  //       { name: "Bánh Hotteok – bánh Pancake", price: 45000, quantity: 2 },
-  //     ],
-  //     totalItems: 4,
-  //     totalPrice: 180000,
-  //     status: "Đơn mới",
-  //   },
-  //   {
-  //     id: "GF2040",
-  //     customer: "Nguyễn Cao Nam",
-  //     deliveryTime: "10:00",
-  //     platform: "ShopeeFood",
-  //     items: [
-  //       { name: "Bánh trung thu Songpyeon", price: 45000, quantity: 2 },
-  //       { name: "Bánh Hotteok – bánh Pancake", price: 45000, quantity: 2 },
-  //     ],
-  //     totalItems: 4,
-  //     totalPrice: 180000,
-  //     status: "Đơn mới",
-  //   },
-  //   {
-  //     id: "GF2048",
-  //     customer: "Nguyễn Văn An",
-  //     deliveryTime: "11:00",
-  //     platform: "GrabFood",
-  //     items: [
-  //       { name: "Bánh mì chay", price: 35000, quantity: 3 },
-  //       { name: "Cơm rang dưa bò", price: 50000, quantity: 1 },
-  //     ],
-  //     totalItems: 4,
-  //     totalPrice: 200000,
-  //     status: "Đang xử lý",
-  //   },
-  //   {
-  //     id: "GF2049",
-  //     customer: "Nguyễn Thị Lan",
-  //     deliveryTime: "12:00",
-  //     platform: "ShopeeFood",
-  //     items: [
-  //       { name: "Bánh xèo", price: 40000, quantity: 2 },
-  //       { name: "Cơm hến", price: 30000, quantity: 2 },
-  //     ],
-  //     totalItems: 4,
-  //     totalPrice: 140000,
-  //     status: "Đã hoàn thành",
-  //   },
-  //   {
-  //     id: "GF2050",
-  //     customer: "Nguyễn Văn B",
-  //     deliveryTime: "13:00",
-  //     platform: "GrabFood",
-  //     items: [
-  //       { name: "Bánh mì chay", price: 35000, quantity: 3 },
-  //       { name: "Cơm rang dưa bò", price: 50000, quantity: 1 },
-  //     ],
-  //     totalItems: 4,
-  //     totalPrice: 200000,
-  //     status: "Đơn mới",
-  //   },
-  //   {
-  //     id: "GF2051",
-  //     customer: "Nguyễn Thị C",
-  //     deliveryTime: "14:00",
-  //     platform: "ShopeeFood",
-  //     items: [
-  //       { name: "Bánh xèo", price: 40000, quantity: 2 },
-  //       { name: "Cơm hến", price: 30000, quantity: 2 },
-  //     ],
-  //     totalItems: 4,
-  //     totalPrice: 140000,
-  //     status: "Đang xử lý",
-  //   },
-  // ]);
+  const [orders, setOrders] = useState([
+    {
+      id: "GF2047",
+      customer: "Nguyễn Cao Nam",
+      deliveryTime: "10:00",
+      platform: "ShopeeFood",
+      items: [
+        { name: "Bánh trung thu Songpyeon", price: 45000, quantity: 2 },
+        { name: "Bánh Hotteok – bánh Pancake", price: 45000, quantity: 2 },
+      ],
+      totalItems: 4,
+      totalPrice: 180000,
+      status: "Đơn mới",
+    },
+    {
+      id: "GF2040",
+      customer: "Nguyễn Cao Nam",
+      deliveryTime: "10:00",
+      platform: "ShopeeFood",
+      items: [
+        { name: "Bánh trung thu Songpyeon", price: 45000, quantity: 2 },
+        { name: "Bánh Hotteok – bánh Pancake", price: 45000, quantity: 2 },
+      ],
+      totalItems: 4,
+      totalPrice: 180000,
+      status: "Đơn mới",
+    },
+    {
+      id: "GF2048",
+      customer: "Nguyễn Văn An",
+      deliveryTime: "11:00",
+      platform: "GrabFood",
+      items: [
+        { name: "Bánh mì chay", price: 35000, quantity: 3 },
+        { name: "Cơm rang dưa bò", price: 50000, quantity: 1 },
+      ],
+      totalItems: 4,
+      totalPrice: 200000,
+      status: "Đang xử lý",
+    },
+    {
+      id: "GF2049",
+      customer: "Nguyễn Thị Lan",
+      deliveryTime: "12:00",
+      platform: "ShopeeFood",
+      items: [
+        { name: "Bánh xèo", price: 40000, quantity: 2 },
+        { name: "Cơm hến", price: 30000, quantity: 2 },
+      ],
+      totalItems: 4,
+      totalPrice: 140000,
+      status: "Đã hoàn thành",
+    },
+    {
+      id: "GF2050",
+      customer: "Nguyễn Văn B",
+      deliveryTime: "13:00",
+      platform: "GrabFood",
+      items: [
+        { name: "Bánh mì chay", price: 35000, quantity: 3 },
+        { name: "Cơm rang dưa bò", price: 50000, quantity: 1 },
+      ],
+      totalItems: 4,
+      totalPrice: 200000,
+      status: "Đơn mới",
+    },
+    {
+      id: "GF2051",
+      customer: "Nguyễn Thị C",
+      deliveryTime: "14:00",
+      platform: "ShopeeFood",
+      items: [
+        { name: "Bánh xèo", price: 40000, quantity: 2 },
+        { name: "Cơm hến", price: 30000, quantity: 2 },
+      ],
+      totalItems: 4,
+      totalPrice: 140000,
+      status: "Đang xử lý",
+    },
+  ]);
 
-  const [orders, setOrders] = useState([]);
+  //const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
 
@@ -112,6 +113,16 @@ const Order = () => {
   const [filteredOrders, setFilteredOrders] = useState(orders);
   const [value, setValue] = useState("ShopeeFood");
   const [open, setOpen] = useState(false);
+
+  type RouteParams = {
+    clientId: string;
+    clientSecret: string;
+  };
+
+  const route = useRoute();
+  const { clientId = "", clientSecret = "" } = route.params
+    ? (route.params as RouteParams)
+    : {};
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -127,13 +138,14 @@ const Order = () => {
         setOrders(ordersData);
       } catch (error) {
         setError(error);
+        console.error("Error fetching orders:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
-  }, []);
+  }, [clientId, clientSecret]);
 
   useEffect(() => {
     filterOrders();

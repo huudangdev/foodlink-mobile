@@ -46,6 +46,10 @@ const SettingsScreen = () => {
     router.push("/screens/AppInfoScreen");
   };
 
+  const handleTermsAndConditionsPress = () => {
+    router.push("/screens/Store/TermScreen");
+  };
+
   const settings = [
     {
       id: 1,
@@ -79,6 +83,7 @@ const SettingsScreen = () => {
       title: "Điều khoản & điều kiện",
       icon: "policy",
       hasInfo: true,
+      onPress: handleTermsAndConditionsPress,
     },
   ];
 

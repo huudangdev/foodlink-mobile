@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { router } from "expo-router";
 
 const stores = [
   {
@@ -52,12 +53,37 @@ const stores = [
 ];
 
 const settings = [
-  { id: 1, name: "Thông tin quán", icon: "information-outline" },
-  { id: 2, name: "Cài đặt thông tin VNPAY", icon: "pencil-outline" },
-  { id: 3, name: "Quản lý thực đơn", icon: "calendar-outline" },
-  { id: 4, name: "Nhóm món thêm", icon: "plus-circle-outline" },
-  { id: 5, name: "Danh mục giảm giá", icon: "tag-outline" },
-  { id: 6, name: "Loại dịch vụ", icon: "apps" },
+  {
+    id: 1,
+    name: "Thông tin quán",
+    icon: "information-outline",
+    link: "Store/StoreScreen",
+  },
+  {
+    id: 2,
+    name: "Cài đặt thông tin VNPAY",
+    icon: "pencil-outline",
+    link: "VNPAYSettings",
+  },
+  {
+    id: 3,
+    name: "Quản lý thực đơn",
+    icon: "calendar-outline",
+    link: "MenuManagement",
+  },
+  {
+    id: 4,
+    name: "Nhóm món thêm",
+    icon: "plus-circle-outline",
+    link: "AdditionalItems",
+  },
+  {
+    id: 5,
+    name: "Danh mục giảm giá",
+    icon: "tag-outline",
+    link: "DiscountCategories",
+  },
+  { id: 6, name: "Loại dịch vụ", icon: "apps", link: "ServiceTypes" },
 ];
 
 const DrawerScreen = () => {
@@ -127,7 +153,14 @@ const DrawerScreen = () => {
       {/* Tích hợp kênh */}
       <Text style={styles.sectionTitle}>Tích hợp kênh</Text>
       {selectedStore.channels.map((channel) => (
-        <TouchableOpacity key={channel.id} style={styles.channelItem}>
+        <TouchableOpacity
+          key={channel.id}
+          style={styles.channelItem}
+          onPress={() => {
+            console.log("Navigate to WebViewGrabfoodScreen");
+            router.push("/screens/Auth/WebViewGrabfoodScreen");
+          }}
+        >
           <Image source={channel.icon} style={styles.channelIcon} />
           <Text style={styles.channelName}>{channel.name}</Text>
           <Text
@@ -145,7 +178,13 @@ const DrawerScreen = () => {
       {/* Cài đặt cửa hàng */}
       <Text style={styles.sectionTitle}>Cài đặt cửa hàng</Text>
       {settings.map((setting) => (
-        <TouchableOpacity key={setting.id} style={styles.menuItem}>
+        <TouchableOpacity
+          key={setting.id}
+          style={styles.menuItem}
+          onPress={() => {
+            router.push(`/screens/${setting.link}`);
+          }}
+        >
           <Icon name={setting.icon} size={24} color="#555" />
           <Text style={styles.menuText}>{setting.name}</Text>
         </TouchableOpacity>
