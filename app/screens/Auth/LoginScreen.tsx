@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+// app/screens/LoginScreen.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -6,58 +6,62 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
+  Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import { useNavigation } from "@react-navigation/native";
+import { login } from "../../services/auth/authApi";
+import { Icon } from "react-native-vector-icons/Icon";
 
 const LoginScreen = () => {
-  const [phone, setPhone] = useState("0386968950");
-  const [password, setPassword] = useState("Happy2Code$T");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
+  const navigation = useNavigation<any>();
 
-  const isFormValid = phone.length > 0 && password.length > 0;
+  const handleLogin = async () => {
+    try {
+      const response = await login(phone, password);
+      console.log("Login successful:", response);
+
+      // Điều hướng đến màn hình chính hoặc màn hình khác sau khi đăng nhập thành công
+      navigation.navigate("HomeScreen");
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        "Login failed. Please check your credentials and try again."
+      );
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../../../assets/images/logo.png")}
-        style={styles.logo}
-      />
       <Text style={styles.title}>Đăng nhập</Text>
-      <Text style={styles.subtitle}>
-        Vui lòng nhập số điện thoại và mật khẩu để đăng nhập
-      </Text>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Số điện thoại</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Số điện thoại"
+        keyboardType="phone-pad"
+        value={phone}
+        onChangeText={setPhone}
+      />
+      <View style={styles.passwordContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Nhập số điện thoại"
-          value={phone}
-          keyboardType="phone-pad"
-          onChangeText={setPhone}
+          placeholder="Mật khẩu"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
         />
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Mật khẩu</Text>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Nhập mật khẩu"
-            value={password}
-            secureTextEntry={!showPassword}
-            onChangeText={setPassword}
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.iconContainer}
+        >
+          <Icon
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={20}
+            color="#ccc"
           />
-          <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.iconContainer}
-          >
-            <Icon
-              name={showPassword ? "eye-off-outline" : "eye-outline"}
-              size={20}
-              color="#ccc"
-            />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
       </View>
       <TouchableOpacity>
         <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
@@ -65,12 +69,7 @@ const LoginScreen = () => {
       <TouchableOpacity
         style={[styles.loginButton, isFormValid && styles.loginButtonActive]}
         disabled={!isFormValid}
-        onPress={() => {
-          console.log("Login button pressed");
-          console.log("Phone:", phone);
-          console.log("Password:", password);
-          router.back();
-        }}
+        onPress={handleLogin}
       >
         <Text style={styles.loginButtonText}>Đăng nhập</Text>
       </TouchableOpacity>
@@ -85,71 +84,44 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  logo: {
-    width: 180,
-    height: "10%",
-    fontWeight: "bold",
-    textAlign: "center",
-    marginVertical: 8,
-    color: "#ff3e00",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    textAlign: "left",
-    marginVertical: 10,
-    color: "#000",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#888",
-    marginBottom: 20,
-  },
-  inputContainer: {
-    marginBottom: 15,
-    width: "100%",
-  },
-  label: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 5,
+    marginBottom: 24,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#f0a500",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
     width: "100%",
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginBottom: 16,
   },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    width: "100%",
   },
   iconContainer: {
     position: "absolute",
-    right: 10,
+    right: 16,
   },
   forgotPassword: {
-    color: "#f0a500",
-    textAlign: "right",
-    marginBottom: 20,
-    fontSize: 14,
+    color: "#FFA000",
+    marginBottom: 16,
   },
   loginButton: {
-    backgroundColor: "#ccc",
-    borderRadius: 8,
-    padding: 15,
-    alignItems: "center",
-    marginBottom: 20,
     width: "100%",
+    padding: 16,
+    backgroundColor: "#FFA000",
+    borderRadius: 8,
+    alignItems: "center",
   },
   loginButtonActive: {
-    backgroundColor: "#f0a500",
+    backgroundColor: "#FF8C00",
   },
   loginButtonText: {
     color: "#fff",
@@ -157,12 +129,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   footerText: {
-    textAlign: "center",
-    color: "#888",
+    marginTop: 16,
     fontSize: 14,
+    color: "#555",
   },
   contactUs: {
-    color: "#f0a500",
+    color: "#FFA000",
     fontWeight: "bold",
   },
 });

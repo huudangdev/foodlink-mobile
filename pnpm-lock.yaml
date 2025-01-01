@@ -11,6 +11,9 @@ dependencies:
   '@expo/vector-icons':
     specifier: ^14.0.2
     version: 14.0.4
+  '@grab-id/grab-id-client':
+    specifier: ^1.1.10
+    version: 1.1.10
   '@react-native-picker/picker':
     specifier: ^2.10.2
     version: 2.10.2(react-native@0.76.2)(react@18.3.1)
@@ -1939,6 +1942,13 @@ packages:
       chalk: 4.1.2
       find-up: 5.0.0
       js-yaml: 4.1.0
+
+  /@grab-id/grab-id-client@1.1.10:
+    resolution: {integrity: sha512-h7W+c9Yal9R7a12NznLCPbnX7PudTRw4+kgbNAqv0GmhSKIfpW3NraaRQkMdHUUcqhIos0IJ8VFwz645lPzRUQ==}
+    dependencies:
+      crypto-js: 3.3.0
+      whatwg-fetch: 3.6.20
+    dev: false
 
   /@hapi/hoek@9.3.0:
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
@@ -4327,6 +4337,10 @@ packages:
 
   /crypt@0.0.2:
     resolution: {integrity: sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow==}
+
+  /crypto-js@3.3.0:
+    resolution: {integrity: sha512-DIT51nX0dCfKltpRiXV+/TVZq+Qq2NgF4644+K7Ttnla7zEzqc+kjJyiB96BHNyUTBxyjzRcZYpUdZa+QAqi6Q==}
+    dev: false
 
   /crypto-random-string@2.0.0:
     resolution: {integrity: sha512-v1plID3y9r/lPhviJ1wrXpLeyUIGAZ2SHNYTEapm7/8A9nLPoyvVp3RK/EPFqn5kEznyWgYZNsRtYYIWbuG8KA==}
