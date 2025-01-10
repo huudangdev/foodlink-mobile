@@ -1,3 +1,4 @@
+import { useRoute } from "@react-navigation/native";
 import { Icon } from "@rneui/base";
 import React, { useState } from "react";
 import {
@@ -11,6 +12,10 @@ import {
 } from "react-native";
 
 const OrderDetailsScreen = () => {
+  const route = useRoute();
+  let { order } = route.params;
+  order = JSON.parse(order);
+  //console.log("order", JSON.parse(order));
   const [orderStatus, setOrderStatus] = useState("Chờ xác nhận");
   const [isConfirmed, setIsConfirmed] = useState(false);
 
@@ -87,12 +92,15 @@ const OrderDetailsScreen = () => {
     };
   }) => (
     <View style={styles.itemContainer}>
-      <Image source={item.image} style={styles.itemImage} />
+      {/* <Image
+        source={require("../../assets/images/example-item.png")}
+        style={styles.itemImage}
+      /> */}
       <View style={styles.itemDetails}>
         <Text style={styles.itemName}>{item.name}</Text>
         <Text style={styles.itemQuantity}>x{item.quantity}</Text>
       </View>
-      <Text style={styles.itemPrice}>{item.price.toLocaleString()} VNĐ</Text>
+      <Text style={styles.itemPrice}>75.000 VNĐ</Text>
     </View>
   );
 
@@ -128,17 +136,26 @@ const OrderDetailsScreen = () => {
       <View style={styles.customerInfo}>
         <View style={styles.infoCustomer}>
           <Image
-            source={require("@/assets/logo/shoppefood.png")}
+            source={require("@/assets/logo/grabfood.png")}
             style={styles.platformLogo}
           />
-          <Text style={styles.customerName}>Nguyễn Cao Nam</Text>
+          <Text style={styles.customerName}>
+            {(order.orderDetails &&
+              order.orderDetails.eater &&
+              order.orderDetails.eater.name) ||
+              order.ID}
+          </Text>
           <View style={[styles.status, getStatusStyle()]}>
-            <Text style={styles.statusText}>{orderStatus}</Text>
+            <Text style={styles.statusText}>
+              {order.deliveryStatus.split("_")[0]}
+            </Text>
           </View>
         </View>
         <View style={styles.infoCustomer}>
-          <Text style={styles.deliveryTime}>Order ID: GF26493</Text>
-          <Text style={styles.deliveryTime}>Giao hàng lúc: 10:00</Text>
+          <Text style={styles.deliveryTime}>Order ID: {order.displayID}</Text>
+          <Text style={styles.deliveryTime}>
+            Được tạo lúc: {new Date(order.createdAt).toLocaleTimeString()}
+          </Text>
         </View>
         <View style={styles.CTA}>
           {/* Call Button */}
@@ -167,19 +184,34 @@ const OrderDetailsScreen = () => {
       </View>
 
       <FlatList
-        data={orderItems}
+        data={
+          (order.orderDetails &&
+            order.orderDetails.itemInfo &&
+            order.orderDetails.itemInfo.items) ||
+          []
+        }
         keyExtractor={(item) => item.id}
         renderItem={renderOrderItem}
       />
 
       <View style={styles.totalContainer}>
-        <Text style={styles.totalLabel}>Số món: {orderItems.length}</Text>
+        <Text style={styles.totalLabel}>
+          Số món:{" "}
+          {order.orderDetails &&
+          order.orderDetails.itemInfo &&
+          typeof order.orderDetails.itemInfo.count === "number"
+            ? order.orderDetails.itemInfo.count
+            : 0}
+        </Text>
         <Text style={styles.totalAmount}>
-          {totalAmount.toLocaleString()} VNĐ
+          {(order.orderDetails && order.orderDetails.orderValue) ||
+            (order.cancelledOriginalPriceDisplay &&
+              order.cancelledOriginalPriceDisplay.toLocaleString())}{" "}
+          VND
         </Text>
       </View>
 
-      {!isConfirmed && (
+      {/* {!isConfirmed && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.confirmButton}
@@ -197,7 +229,7 @@ const OrderDetailsScreen = () => {
             <Text style={styles.buttonText}>Huỷ Đơn</Text>
           </TouchableOpacity>
         </View>
-      )}
+      )} */}
     </SafeAreaView>
   );
 };

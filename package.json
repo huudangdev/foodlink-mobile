@@ -17,6 +17,7 @@
         "@babel/runtime": "^7.26.0",
         "@expo/vector-icons": "^14.0.2",
         "@grab-id/grab-id-client": "^1.1.10",
+        "@react-native-async-storage/root": "github:react-native-async-storage/async-storage",
         "@react-native-picker/picker": "^2.10.2",
         "@react-navigation/drawer": "^7.0.20",
         "@react-navigation/native": "^7.0.0",

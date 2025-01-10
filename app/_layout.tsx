@@ -2,6 +2,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
   DarkTheme,
   DefaultTheme,
+  NavigationContainer,
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
@@ -11,6 +12,10 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
+import LoginScreen from "./screens/Auth/LoginScreen";
+import WebViewGrabfoodScreen from "./screens/Auth/WebViewGrabfoodScreen";
+import OrderScreen from "./screens/OrderScreen";
+import { AuthProvider } from "./context/AuthContext";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -53,11 +58,59 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-      </Stack>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          {/* <Stack.Screen name="modal" options={{ presentation: "modal" }} /> */}
+          <Stack.Screen name="+not-found" />
+          <Stack.Screen
+            name="screens/Auth/LoginScreen"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="screens/DrawerScreen"
+            options={{
+              headerShown: true,
+              title: "Thông tin cửa hàng",
+              headerBackTitle: "Trở lại",
+            }}
+          />
+          <Stack.Screen
+            name="screens/RevenueReportScreen"
+            options={{
+              headerShown: true,
+              title: "Báo cáo doanh thu",
+              headerBackTitle: "Trở lại",
+            }}
+          />
+          <Stack.Screen
+            name="screens/CustomerReportScreen"
+            options={{
+              headerShown: true,
+              title: "Báo cáo khách hàng",
+              headerBackTitle: "Trở lại",
+            }}
+          />
+          <Stack.Screen
+            name="screens/NotificationScreen"
+            options={{
+              headerShown: true,
+              title: "Thông báo",
+              headerBackTitle: "Trở lại",
+            }}
+          />
+          <Stack.Screen
+            name="screens/OrderDetail"
+            options={{
+              headerShown: true,
+              title: "Chi tiết đơn hàng",
+              headerBackTitle: "Trở lại",
+            }}
+          />
+          <Stack.Screen name="(tabs)/index" options={{ headerShown: false }} />
+        </Stack>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

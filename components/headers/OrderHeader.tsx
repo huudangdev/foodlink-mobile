@@ -25,7 +25,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
       <View style={styles.dropdownContainer}>
         <DropDownPicker
           open={open}
-          value={selectedPlatform ? selectedPlatform : "ShopeeFood"}
+          value={selectedPlatform ? selectedPlatform : "GrabFood"}
           items={[
             {
               label: "ShopeeFood",
@@ -45,6 +45,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
                   style={{ width: 20, height: 20 }}
                 />
               ),
+              value: "GrabFood",
             },
           ]}
           setOpen={setOpen}

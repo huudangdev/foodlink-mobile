@@ -10,22 +10,30 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { login } from "../../services/auth/authApi";
-import { Icon } from "react-native-vector-icons/Icon";
+import Icon from "react-native-vector-icons/MaterialIcons"; // Sử dụng gói biểu tượng cụ thể
+import { setToken } from "@/app/utils/auth";
+import { useAuth } from "@/app/context/AuthContext";
+import { routeToScreen } from "expo-router/build/useScreens";
 
 const LoginScreen = () => {
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("dang.nguyentranhuu");
+  const [password, setPassword] = useState("Uit1657421717;");
   const [showPassword, setShowPassword] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const navigation = useNavigation<any>();
+  const { setToken, setUser } = useAuth();
 
   const handleLogin = async () => {
+    console.log("Logging in with phone:", phone, "and password:", password);
     try {
       const response = await login(phone, password);
       console.log("Login successful:", response);
 
+      setToken(response.token); // Lưu token vào bộ nhớ cục bộ
+      setUser(response.user); // Lưu thông tin người dùng vào bộ nhớ cục bộ
+
       // Điều hướng đến màn hình chính hoặc màn hình khác sau khi đăng nhập thành công
-      navigation.navigate("HomeScreen");
+      navigation.navigate("(tabs)");
     } catch (error) {
       Alert.alert(
         "Error",
@@ -57,7 +65,7 @@ const LoginScreen = () => {
           style={styles.iconContainer}
         >
           <Icon
-            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            name={showPassword ? "visibility-off" : "visibility"}
             size={20}
             color="#ccc"
           />
@@ -68,7 +76,7 @@ const LoginScreen = () => {
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.loginButton, isFormValid && styles.loginButtonActive]}
-        disabled={!isFormValid}
+        //disabled={!isFormValid}
         onPress={handleLogin}
       >
         <Text style={styles.loginButtonText}>Đăng nhập</Text>

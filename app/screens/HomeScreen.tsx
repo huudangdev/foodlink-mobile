@@ -1,5 +1,5 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text } from "@/components/Themed";
 import {
   StyleSheet,
@@ -11,82 +11,138 @@ import {
   ScrollView,
 } from "react-native";
 import { Icon } from "@rneui/themed/dist/Icon";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
+import { getGrabFoodOrders } from "../services/grabfood";
+import { useAuth } from "../context/AuthContext";
+
+interface Order {
+  displayID: ReactNode;
+  createdAt: string | number | Date;
+  cancelledOriginalPriceDisplay: any;
+  deliveryStatus: any;
+  id: string;
+  customer: string;
+  status: string;
+  platform: string;
+  deliveryTime: string;
+  totalItems: number;
+  totalPrice: number;
+  items: { name: string; quantity: number; price: number }[];
+  orderDetails?: {
+    orderValue:
+      | {
+          itemInfo:
+            | {
+                count:
+                  | {
+                      items:
+                        | {
+                            map(
+                              arg0: (item: any, index: any) => React.JSX.Element
+                            ): React.ReactNode;
+                            eater?: { name: string };
+                          }
+                        | undefined;
+                      eater?: { name: string };
+                    }
+                  | undefined;
+                items:
+                  | {
+                      map(
+                        arg0: (item: any, index: any) => React.JSX.Element
+                      ): React.ReactNode;
+                      eater?: { name: string };
+                    }
+                  | undefined;
+                eater?: { name: string };
+              }
+            | undefined;
+          eater?: { name: string };
+        }
+      | undefined;
+    itemInfo:
+      | {
+          count:
+            | {
+                items:
+                  | {
+                      map(
+                        arg0: (item: any, index: any) => React.JSX.Element
+                      ): React.ReactNode;
+                      eater?: { name: string };
+                    }
+                  | undefined;
+                eater?: { name: string };
+              }
+            | undefined;
+          items:
+            | {
+                map(
+                  arg0: (item: any, index: any) => React.JSX.Element
+                ): React.ReactNode;
+                eater?: { name: string };
+              }
+            | undefined;
+          eater?: { name: string };
+        }
+      | undefined;
+    eater?: { name: string };
+  };
+}
 
 const Home = () => {
-  const [orders, setOrders] = useState([
-    {
-      id: "GF2047",
-      customer: "Nguyễn Cao Nam",
-      deliveryTime: "10:00",
-      platform: "ShopeeFood",
-      items: [
-        { name: "Bánh trung thu Songpyeon", price: 45000, quantity: 2 },
-        { name: "Bánh Hotteok – bánh Pancake", price: 45000, quantity: 2 },
-      ],
-      totalItems: 4,
-      totalPrice: 180000,
-      status: "Đơn mới",
-    },
-    {
-      id: "GF2048",
-      customer: "Nguyễn Văn An",
-      deliveryTime: "11:00",
-      platform: "GrabFood",
-      items: [
-        { name: "Bánh mì chay", price: 35000, quantity: 3 },
-        { name: "Cơm rang dưa bò", price: 50000, quantity: 1 },
-      ],
-      totalItems: 4,
-      totalPrice: 200000,
-      status: "Đang xử lý",
-    },
-    {
-      id: "GF2049",
-      customer: "Nguyễn Thị Lan",
-      deliveryTime: "12:00",
-      platform: "ShopeeFood",
-      items: [
-        { name: "Bánh xèo", price: 40000, quantity: 2 },
-        { name: "Cơm hến", price: 30000, quantity: 2 },
-      ],
-      totalItems: 4,
-      totalPrice: 140000,
-      status: "Đã hoàn thành",
-    },
-    {
-      id: "GF2050",
-      customer: "Nguyễn Văn B",
-      deliveryTime: "13:00",
-      platform: "GrabFood",
-      items: [
-        { name: "Bánh mì chay", price: 35000, quantity: 3 },
-        { name: "Cơm rang dưa bò", price: 50000, quantity: 1 },
-      ],
-      totalItems: 4,
-      totalPrice: 200000,
-      status: "Đơn mới",
-    },
-    {
-      id: "GF2051",
-      customer: "Nguyễn Thị C",
-      deliveryTime: "14:00",
-      platform: "ShopeeFood",
-      items: [
-        { name: "Bánh xèo", price: 40000, quantity: 2 },
-        { name: "Cơm hến", price: 30000, quantity: 2 },
-      ],
-      totalItems: 4,
-      totalPrice: 140000,
-      status: "Đang xử lý",
-    },
-  ]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredOrders, setFilteredOrders] = useState(orders);
   const [selectedStatus, setSelectedStatus] = useState("Đơn mới");
   const [open, setOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("ShopeeFood");
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const endTime = new Date().toISOString();
+        const startTime = new Date(
+          new Date().setDate(new Date().getDate() - 29)
+        ).toISOString();
+        const pageIndex = 0;
+        const pageSize = 100;
+        const grabFoodToken = user?.grabFoodToken;
+
+        console.log(
+          "GrabFood access token on Home:",
+          grabFoodToken,
+          "Start time:",
+          startTime,
+          "End time:",
+          endTime
+        );
+
+        // Lấy danh sách order
+        const ordersData = await getGrabFoodOrders(
+          startTime,
+          endTime,
+          pageIndex,
+          pageSize,
+          grabFoodToken
+        );
+        setOrders(ordersData.statements);
+      } catch (error) {
+        setError(error);
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+    const intervalId = setInterval(fetchOrders, 10000); // Fetch every 5 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+    //console.log("orders:", orders);
+  }, [user]);
 
   const handleReportPress = (label: string) => {
     if (label === "Đơn hàng") {
@@ -96,9 +152,18 @@ const Home = () => {
     }
   };
 
-  const handleOrderPress = () => {
-    router.push("/screens/OrderDetail");
+  const handleOrderPress = (order: Order) => {
+    router.push({
+      pathname: "/screens/OrderDetail",
+      params: { order: JSON.stringify(order) },
+    });
   };
+
+  // const navigation = useNavigation();
+
+  // const handleOrderPress = (order: Order) => {
+  //   navigation.navigate("OrderDetail", { order });
+  // };
 
   const handleSearch = (text: string) => {
     setSearchTerm(text);
@@ -136,12 +201,12 @@ const Home = () => {
         {[
           {
             label: "Đơn hàng",
-            value: "500",
+            value: "2",
             image: require("../../assets/images/order-background.jpg"),
           },
           {
             label: "Doanh thu",
-            value: "15.000.000 VNĐ",
+            value: "0 VNĐ",
             image: require("../../assets/images/revenue-background.png"),
           },
         ].map((stat, index) => (
@@ -199,7 +264,7 @@ const Home = () => {
               { color: selectedStatus === "Đơn mới" ? "white" : "black" },
             ]}
           >
-            Đơn mới
+            Tất cả
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -255,8 +320,11 @@ const Home = () => {
         pagingEnabled={true}
         style={[styles.orderList, { marginLeft: 0 }]}
       >
-        {filteredOrders.map((order, index) => (
-          <TouchableOpacity style={styles.card} onPress={handleOrderPress}>
+        {orders.map((order, index) => (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => handleOrderPress(order)}
+          >
             {/* Customer and Order Information */}
             <View style={styles.header}>
               <Image
@@ -268,10 +336,14 @@ const Home = () => {
                 style={styles.platformLogo}
               />
               <View>
-                <Text style={styles.customer}>{order.customer}</Text>
-                <Text style={styles.orderId}>Order ID: {order.id}</Text>
+                <Text style={styles.customer}>
+                  {order.orderDetails &&
+                    order.orderDetails.eater &&
+                    order.orderDetails.eater.name}
+                </Text>
+                <Text style={styles.orderId}>Order ID: {order.displayID}</Text>
                 <Text style={styles.deliveryTime}>
-                  Giao hàng lúc: {order.deliveryTime}
+                  Được tạo lúc: {new Date(order.createdAt).toLocaleTimeString()}
                 </Text>
               </View>
             </View>
@@ -285,7 +357,7 @@ const Home = () => {
                 ]}
               >
                 <Text style={[styles.statusText, { color: "white" }]}>
-                  {order.status}
+                  {order.deliveryStatus.split("_")[0]}
                 </Text>
               </TouchableOpacity>
               {/* <View style={styles.platform}>
@@ -294,27 +366,41 @@ const Home = () => {
             </View>
 
             {/* Order Items */}
-            {order.items.map((item, index) => (
-              <View key={index} style={styles.itemRow}>
-                <Image
-                  source={{ uri: "https://via.placeholder.com/50" }}
-                  style={styles.itemImage}
-                />
-                <View style={styles.itemDetails}>
-                  <Text style={styles.itemName}>{item.name}</Text>
-                  <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+            {order.orderDetails &&
+              order.orderDetails.itemInfo &&
+              order.orderDetails.itemInfo.items &&
+              order.orderDetails.itemInfo.items.map((item, index) => (
+                <View key={index} style={styles.itemRow}>
+                  {/* <Image
+                    source={{ uri: "https://via.placeholder.com/50" }}
+                    style={styles.itemImage}
+                  /> */}
+                  <View style={styles.itemDetails}>
+                    <Text style={styles.itemName}>{item.name}</Text>
+                    <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+                  </View>
+                  <Text style={styles.itemPrice}>
+                    {/* {item.price.toLocaleString()} VND */}
+                    75.000 VND
+                  </Text>
                 </View>
-                <Text style={styles.itemPrice}>
-                  {item.price.toLocaleString()} VND
-                </Text>
-              </View>
-            ))}
+              ))}
 
             {/* Footer with Total */}
             <View style={styles.footer}>
-              <Text style={styles.totalItems}>Số món: {order.totalItems}</Text>
+              <Text style={styles.totalItems}>
+                Số món:{" "}
+                {order.orderDetails &&
+                order.orderDetails.itemInfo &&
+                typeof order.orderDetails.itemInfo.count === "number"
+                  ? order.orderDetails.itemInfo.count
+                  : 0}
+              </Text>
               <Text style={styles.totalPrice}>
-                {order.totalPrice.toLocaleString()} VND
+                {(order.orderDetails && order.orderDetails.orderValue) ||
+                  (order.cancelledOriginalPriceDisplay &&
+                    order.cancelledOriginalPriceDisplay.toLocaleString())}{" "}
+                VND
               </Text>
             </View>
           </TouchableOpacity>
@@ -552,3 +638,10 @@ const styles = StyleSheet.create({
 });
 
 export default Home;
+function setError(error: unknown) {
+  throw new Error("Function not implemented.");
+}
+
+function setLoading(arg0: boolean) {
+  throw new Error("Function not implemented.");
+}

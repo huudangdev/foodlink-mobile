@@ -14,6 +14,9 @@ dependencies:
   '@grab-id/grab-id-client':
     specifier: ^1.1.10
     version: 1.1.10
+  '@react-native-async-storage/root':
+    specifier: github:react-native-async-storage/async-storage
+    version: github.com/react-native-async-storage/async-storage/91b0e16a43c37fb81b503eda27ef00c543f34150
   '@react-native-picker/picker':
     specifier: ^2.10.2
     version: 2.10.2(react-native@0.76.2)(react@18.3.1)
@@ -6567,6 +6570,7 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
     requiresBuild: true
     optional: true
 
@@ -6575,6 +6579,7 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
     requiresBuild: true
     dev: false
     optional: true
@@ -6584,6 +6589,7 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
     requiresBuild: true
     optional: true
 
@@ -6592,6 +6598,7 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
     requiresBuild: true
     dev: false
     optional: true
@@ -6601,6 +6608,7 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
     requiresBuild: true
     optional: true
 
@@ -6609,6 +6617,7 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
     requiresBuild: true
     dev: false
     optional: true
@@ -6618,6 +6627,7 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
     requiresBuild: true
     optional: true
 
@@ -6626,6 +6636,7 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
     requiresBuild: true
     dev: false
     optional: true
@@ -9679,3 +9690,10 @@ packages:
   /yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  github.com/react-native-async-storage/async-storage/91b0e16a43c37fb81b503eda27ef00c543f34150:
+    resolution: {tarball: https://codeload.github.com/react-native-async-storage/async-storage/tar.gz/91b0e16a43c37fb81b503eda27ef00c543f34150}
+    name: '@react-native-async-storage/root'
+    version: 0.0.1-dev
+    engines: {node: v20.11.1}
+    dev: false

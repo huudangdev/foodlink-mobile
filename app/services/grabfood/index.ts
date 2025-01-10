@@ -1,35 +1,35 @@
-// app/services/grabfoodApi.ts
+// app/services/index.ts
 import axios from "axios";
+//import { loginGrabFood } from "../auth/authGrabfood";
 
-const GRABFOOD_API_BASE_URL = "https://partner-api.grab.com/food"; // Thay thế bằng URL API của GrabFood
+const GRABFOOD_API_BASE_URL = "http://localhost:3000";
 
-// Hàm để lấy token xác thực
-export const authenticateGrabFood = async (
-  clientId: string,
-  clientSecret: string
+export const getGrabFoodOrders = async (
+  startTime: string,
+  endTime: string,
+  pageIndex: number,
+  pageSize: number,
+  grabFoodToken: string | undefined
 ) => {
   try {
-    const response = await axios.post(`${GRABFOOD_API_BASE_URL}/oauth2/token`, {
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: "client_credentials",
-    });
-    console.log("GrabFood authentication response:", response.data);
-    return response.data.access_token;
-  } catch (error) {
-    console.error("Error authenticating with GrabFood:", error);
-    throw error;
-  }
-};
-
-// Hàm để lấy đơn hàng
-export const getGrabFoodOrders = async (accessToken: string) => {
-  try {
-    const response = await axios.get(`${GRABFOOD_API_BASE_URL}/orders`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+    // Xác thực và lấy token
+    //const accessToken = await loginGrabFood(username, password);
+    const accessToken = grabFoodToken;
+    console.log("GrabFood access token on getGrabFoodOrders:", accessToken);
+    // Lấy danh sách order
+    const response = await axios.get(`${GRABFOOD_API_BASE_URL}/order-history`, {
+      params: {
+        startTime,
+        endTime,
+        pageIndex,
+        pageSize,
+        grabFoodToken,
       },
+      // headers: {
+      //   Authorization: `${accessToken}`,
+      // },
     });
+    console.log("GrabFood orders:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching GrabFood orders:", error);

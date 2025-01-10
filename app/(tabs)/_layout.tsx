@@ -1,5 +1,5 @@
-import React from "react";
-import { Link, router, Tabs } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Link, router, Tabs, useNavigation } from "expo-router";
 import {
   Pressable,
   View,
@@ -13,40 +13,13 @@ import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { Image } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import Order from "../screens/OrderScreen";
 import OrderHeader from "@/components/headers/OrderHeader";
 import { BottomTabHeaderProps } from "@react-navigation/bottom-tabs";
+import { getToken } from "../utils/auth";
+import { AuthProvider, useAuth } from "../context/AuthContext";
 
 const Drawer = createDrawerNavigator();
-
-// Side menu tùy chỉnh
-function CustomDrawerContent(props: any) {
-  return (
-    <View style={styles.drawerContent}>
-      <Text style={styles.header}>GongCha 01-Nguyễn Văn Linh</Text>
-      <View style={styles.menuItem}>
-        <Text>Đánh giá</Text>
-      </View>
-      <View style={styles.menuItem}>
-        <Text>Cài đặt thông báo</Text>
-      </View>
-      <View style={styles.menuItem}>
-        <Text>Tích hợp kênh</Text>
-        {/* Các kênh tích hợp */}
-        <View style={styles.subMenu}>
-          <Text>- GrabFood (Chưa kết nối)</Text>
-          <Text>- SPFood (Đã kết nối)</Text>
-          <Text>- Gojek (Chưa kết nối)</Text>
-        </View>
-      </View>
-      <View style={styles.menuItem}>
-        <Text>Cài đặt cửa hàng</Text>
-      </View>
-    </View>
-  );
-}
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -104,12 +77,25 @@ function CustomHeader() {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
+  const navigation = useNavigation();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const { token } = useAuth();
+
+  // useEffect(() => {
+  //   if (!token) {
+  //     router.push("/screens/Auth/LoginScreen");
+  //   }
+  // }, [token]);
+
+  // if (!token) {
+  //   return null; // Hoặc bạn có thể hiển thị một màn hình chờ
+  // }
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
         headerShown: useClientOnlyValue(false, true),
       }}
     >
