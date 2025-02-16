@@ -10,9 +10,9 @@ import {
 const EditInfoScreen = () => {
   const [isEditing, setIsEditing] = useState([false, false, false]);
   const [values, setValues] = useState({
-    name: "Hoàng Hà",
-    phone: "09182748389",
-    email: "Dxtech@gmail.com",
+    name: "Nguyễn Đăng",
+    phone: "0386968950",
+    email: "dang.nguyentranhuu@gmail.com",
   });
 
   const handleEdit = (index: number) => {
@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     padding: 24,
-    //justifyContent: "space-between",
   },
   row: {
     marginBottom: 16,
@@ -114,7 +113,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
     fontSize: 16,
     height: 44,
   },

@@ -1,7 +1,8 @@
 // app/services/authApi.ts
 import axios from "axios";
+//import { URL_DEVELOPMENT } from "@env";
 
-const API_BASE_URL = "http://localhost:3000"; // Thay thế bằng URL API của bạn
+const API_BASE_URL = "https://foodlink-api.onrender.com";
 
 export const login = async (username: string, password: string) => {
   try {

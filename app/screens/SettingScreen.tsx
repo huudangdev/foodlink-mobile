@@ -1,4 +1,4 @@
-import { Icon } from "@rneui/themed";
+import { Icon } from "@rneui/base";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {

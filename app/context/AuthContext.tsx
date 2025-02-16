@@ -8,6 +8,10 @@ interface User {
   email: string;
   grabFoodToken: string;
   storeInfo: any;
+  printers: any;
+  shopeeFoodToken: string;
+  notifications: any;
+  jwt: string;
   // Thêm các trường khác nếu cần
 }
 
@@ -16,6 +20,8 @@ interface AuthContextProps {
   user: User | null;
   setToken: (token: string | null) => void;
   setUser: (user: User | null) => void;
+  printers: any;
+  jwt: string | null;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -31,15 +37,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // const storedToken = await getToken();
-      // console.log("Stored token:", storedToken);
-      // if (!storedToken) {
-      //   router.push("/screens/Auth/LoginScreen");
-      // } else {
-      //   setToken(storedToken);
-      //   // const storedUser = await getUser(storedToken);
-      //   // setUser(storedUser);
-      // }
       router.push("/screens/Auth/LoginScreen");
     };
 

@@ -36,7 +36,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     padding: 16,
-    justifyContent: "space-between",
   },
   form: {
     flex: 1,
@@ -54,10 +53,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    padding: 16,
+    paddingHorizontal: 16,
     backgroundColor: "#fff",
     height: 44,
     fontSize: 16,
+    alignContent: "center",
+    textAlignVertical: "center",
   },
   button: {
     backgroundColor: "#f5a623",

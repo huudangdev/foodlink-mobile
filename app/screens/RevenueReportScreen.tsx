@@ -1,46 +1,159 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Image,
   ScrollView,
   Dimensions,
+  Image,
 } from "react-native";
 import { BarChart } from "react-native-chart-kit";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import DatePicker from "react-native-ui-datepicker";
+import Icon from "react-native-vector-icons/FontAwesome";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useRouter } from "expo-router";
+import { useAuth } from "../context/AuthContext";
+import { getGrabFoodOrders } from "../services/grabfood";
+import { useOrders } from "../context/OrderContext";
 
 const RevenueReportScreen = () => {
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(today.getDate() - 30);
+
+  const { orders, loading, error, totalRevenue } = useOrders();
+
   const router = useRouter();
-  const [date, setDate] = React.useState(new Date());
-  const [showDatePicker, setShowDatePicker] = React.useState(false);
+  const { user } = useAuth();
+  const [date, setDate] = useState(new Date());
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [startDate, setStartDate] = useState(thirtyDaysAgo);
+  const [endDate, setEndDate] = useState(today);
+  const [isStartDatePickerVisible, setStartDatePickerVisibility] =
+    useState(false);
+  const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
+  //const [orders, setOrders] = useState([]);
+  //const [error, setError] = useState<unknown>(null);
+  const [dailyRevenue, setDailyRevenue] = useState<number[]>([]);
+  //const [totalRevenue, setTotalRevenue] = useState(0);
+  const [newCustomerRevenue, setNewCustomerRevenue] = useState(0);
+  const [returningCustomerRevenue, setReturningCustomerRevenue] = useState(0);
+  const [averageDailyRevenue, setAverageDailyRevenue] = useState(0);
+
+  const handleConfirmStartDate = (date: any) => {
+    setStartDate(date);
+    setStartDatePickerVisibility(false);
+  };
+
+  const handleConfirmEndDate = (date: any) => {
+    setEndDate(date);
+    setEndDatePickerVisibility(false);
+  };
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        // const endTime = new Date().toISOString();
+        // const startTime = new Date(
+        //   new Date().setDate(new Date().getDate() - 29)
+        // ).toISOString();
+        // const pageIndex = 0;
+        // const pageSize = 100;
+        // const grabFoodToken = user?.grabFoodToken;
+
+        // // Lấy danh sách order
+        // const ordersData = await getGrabFoodOrders(
+        //   startTime,
+        //   endTime,
+        //   pageIndex,
+        //   pageSize,
+        //   grabFoodToken,
+        //   user?.username
+        // );
+        // setOrders(ordersData.statements);
+
+        // Tính toán doanh thu hàng ngày
+        const dailyRev = Array(30).fill(0);
+
+        // Tính tổng doanh thu và doanh thu từ khách hàng mới và khách hàng quay lại
+        let totalRev = 0;
+        let newCustomerRev = 0;
+        let returningCustomerRev = 0;
+
+        orders.forEach((order: any) => {
+          const price = parseFloat(order.priceDisplay);
+          if (!isNaN(price)) {
+            totalRev += price;
+            if (order.isPaxNewCustomer) {
+              newCustomerRev += price;
+            } else {
+              returningCustomerRev += price;
+            }
+          }
+        });
+
+        //setTotalRevenue(totalRev * 1000);
+        setNewCustomerRevenue(newCustomerRev * 1000);
+        setReturningCustomerRevenue(returningCustomerRev * 1000);
+        setAverageDailyRevenue((totalRev * 1000) / 30);
+
+        orders.forEach((order: any) => {
+          //console.log("Order:", order);
+          const orderDate = new Date(order.createdAt);
+          const dayIndex = Math.floor(
+            (today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (dayIndex < 30) {
+            dailyRev[dayIndex] += parseFloat(order.priceDisplay) * 1000; // Tổng doanh thu hàng ngày
+          }
+        });
+
+        setDailyRevenue(dailyRev.reverse());
+      } catch (error) {
+        //setError(error);
+        console.error("Error fetching orders:", error);
+      }
+    };
+
+    if (
+      (user?.grabFoodToken && user?.grabFoodToken !== "") ||
+      (user?.shopeeFoodToken && user?.shopeeFoodToken !== "")
+    ) {
+      fetchOrders();
+    }
+  }, [user]);
 
   return (
     <ScrollView style={styles.container}>
-      {/* Date Picker */}
+      {/* Header */}
       <View style={styles.datePicker}>
-        {!showDatePicker ? (
-          <View style={styles.datePicker}>
-            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-              <Icon name="chevron-left" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.dateText}>Tháng 9 năm 2024</Text>
-            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-              <Icon name="chevron-right" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <DatePicker
-            mode="single"
-            date={date}
-            //onDateChange={setDate}
-            //onCloseModal={() => setShowDatePicker(false)}
-          />
-        )}
+        <TouchableOpacity onPress={() => setStartDatePickerVisibility(true)}>
+          <Icon name="calendar" size={24} color="#000" style={{ padding: 8 }} />
+        </TouchableOpacity>
+        <Text style={styles.dateText}>
+          {startDate.toLocaleDateString("vi-VN")} -{" "}
+          {endDate.toLocaleDateString("vi-VN")}
+        </Text>
       </View>
+
+      <DateTimePickerModal
+        isVisible={isStartDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirmStartDate}
+        onCancel={() => setStartDatePickerVisibility(false)}
+        maximumDate={new Date()}
+        minimumDate={new Date(new Date().setDate(new Date().getDate() - 30))}
+      />
+
+      <DateTimePickerModal
+        isVisible={isEndDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirmEndDate}
+        onCancel={() => setEndDatePickerVisibility(false)}
+        maximumDate={new Date()}
+        minimumDate={startDate}
+      />
 
       {/* Tabs */}
       <View style={styles.tabs}>
@@ -63,28 +176,35 @@ const RevenueReportScreen = () => {
           style={styles.summaryImage}
         />
         <View style={styles.summaryInfo}>
-          <Text style={styles.summaryValue}>105.000.000 VNĐ</Text>
+          <Text style={styles.summaryValue}>
+            {dailyRevenue.reduce((a, b) => a + b, 0).toLocaleString("vi-VN")}{" "}
+            VND
+          </Text>
           <Text style={styles.summaryLabel}>Tổng doanh thu</Text>
-          <Text style={styles.summaryChange}>+50%</Text>
         </View>
       </View>
-
       {/* Stats */}
       <View style={styles.statsRow}>
         {[
           {
-            label: "Đơn hàng",
-            value: "500",
+            label: "Doanh thu khách hàng mới",
+            value: `${Math.round(newCustomerRevenue).toLocaleString(
+              "vi-VN"
+            )} VNĐ`,
             image: require("../../assets/images/order-background.jpg"),
           },
           {
-            label: "Phí nền tảng",
-            value: "-15tr VNĐ",
+            label: "Doanh thu khách hàng quay lại",
+            value: `${Math.round(returningCustomerRevenue).toLocaleString(
+              "vi-VN"
+            )} VNĐ`,
             image: require("../../assets/images/revenue-background.png"),
           },
           {
-            label: "Doanh thu",
-            value: "90tr VNĐ",
+            label: "Trung bình doanh thu theo ngày",
+            value: `${Math.round(averageDailyRevenue).toLocaleString(
+              "vi-VN"
+            )} VNĐ`,
             image: require("../../assets/images/order-background.jpg"),
           },
         ].map((stat, index) => (
@@ -98,26 +218,38 @@ const RevenueReportScreen = () => {
         ))}
       </View>
 
-      {/* Chart */}
-      <View style={styles.chartContainer}>
+      {/* Bar Chart */}
+      <View style={{ marginTop: 16, alignItems: "center" }}>
         <Text style={styles.chartTitle}>Biểu đồ doanh thu</Text>
-        <Text style={styles.chartSubtitle}>Đơn vị: triệu VNĐ</Text>
+        <Text style={{ fontSize: 14, fontWeight: "thin", marginTop: 8 }}>
+          Đơn vị: VND
+        </Text>
       </View>
       <BarChart
         data={{
-          labels: ["Shopee", "GrabFood"],
-          datasets: [{ data: [70, 80] }],
+          labels: Array.from({ length: 7 }, (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6 - i));
+            return date.toLocaleDateString("vi-VN", {
+              month: "2-digit",
+              day: "2-digit",
+            });
+          }),
+          datasets: [
+            {
+              data: dailyRevenue.slice(-7),
+              color: (opacity = 1) => `rgba(255, 99, 132, ${opacity})`,
+            },
+          ],
         }}
         width={Dimensions.get("window").width - 32}
-        height={220}
+        height={240}
         chartConfig={{
           backgroundGradientFrom: "#fff",
           backgroundGradientTo: "#fff",
-          backgroundColor: "#e26a00",
-          color: (opacity = 1) => `rgba(254, 170, 0, ${opacity})`,
-          barPercentage: 2.8,
-          barRadius: 4,
-          decimalPlaces: 0,
+          color: (opacity = 1) => `rgba(255, 160, 0, ${opacity})`,
+          barPercentage: 0.5,
+          decimalPlaces: 0, // Ẩn các số 0 hiển thị sau dấu "."
           labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
           propsForDots: {
             r: "6",
@@ -126,8 +258,9 @@ const RevenueReportScreen = () => {
           },
         }}
         style={styles.chart}
-        fromZero={true}
-        withInnerLines={false}
+        fromZero
+        showValuesOnTopOfBars
+        formatYLabel={(yValue) => parseInt(yValue).toLocaleString("vi-VN")}
       />
     </ScrollView>
   );
@@ -255,7 +388,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
@@ -264,7 +397,7 @@ const styles = StyleSheet.create({
   },
   statImage: {
     width: "100%",
-    height: 80,
+    height: 120,
     borderRadius: 8,
     marginBottom: 8,
   },
@@ -278,8 +411,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     backgroundColor: "rgba(0, 0, 0, 0.5)", // Optional: to add a dark overlay
     borderRadius: 8,
-    height: "100%",
-    padding: 8,
+    height: "95%",
+    padding: 16,
   },
   statValue: {
     fontSize: 16,
@@ -299,19 +432,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     margin: 8,
   },
-  chartSubtitle: {
-    fontSize: 14,
-    color: "#000",
-    marginBottom: 0,
-  },
   chartTitle: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 0,
     marginTop: 0,
   },
+  chartSubtitle: {
+    fontSize: 14,
+    color: "#000",
+    marginBottom: 0,
+  },
   chart: {
-    marginVertical: 8,
+    marginVertical: 16,
+    marginHorizontal: -16,
     elevation: 2,
   },
 });

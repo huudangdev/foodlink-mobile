@@ -3,7 +3,6 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable, Image } from "react-native";
 import { useNavigation, DrawerActions } from "@react-navigation/native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Divider } from "@rneui/base";
 
 interface CustomHeaderProps {
   open: boolean;
@@ -74,8 +73,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "white",
     alignItems: "center",
-    marginTop: 60,
-    height: 72,
+    paddingTop: 0,
+    height: 80,
     width: "100%",
   },
   dropdownContainer: {

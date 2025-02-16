@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, router, Tabs, useNavigation } from "expo-router";
 import {
-  Pressable,
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  Appearance,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
@@ -16,8 +16,7 @@ import { Image } from "react-native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import OrderHeader from "@/components/headers/OrderHeader";
 import { BottomTabHeaderProps } from "@react-navigation/bottom-tabs";
-import { getToken } from "../utils/auth";
-import { AuthProvider, useAuth } from "../context/AuthContext";
+import logo from "@/assets/images/logo.jpg";
 
 const Drawer = createDrawerNavigator();
 
@@ -34,7 +33,7 @@ const handleNotificationPress = () => {
   router.push("/screens/NotificationScreen");
 };
 
-function CustomHeader() {
+function HomeHeader() {
   return (
     <View style={styles.headerContainer}>
       <View
@@ -56,7 +55,7 @@ function CustomHeader() {
             style={{ width: 40, height: 40 }}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Food Hub</Text>
+        <Image source={logo} style={{ width: 60, height: 30 }} />
         <TouchableOpacity
           style={styles.notificationContainer}
           onPress={handleNotificationPress}
@@ -65,9 +64,9 @@ function CustomHeader() {
             source={require("../../public/icons/notification.png")}
             style={{ width: 40, height: 40 }}
           />
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>3</Text>
-          </View>
+          {/* <View style={styles.badge}>
+            <Text style={styles.badgeText}>0</Text>
+          </View> */}
         </TouchableOpacity>
       </View>
     </View>
@@ -80,7 +79,7 @@ export default function TabLayout() {
   const navigation = useNavigation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const { token } = useAuth();
+  //const { token } = useAuth();
 
   // useEffect(() => {
   //   if (!token) {
@@ -91,6 +90,10 @@ export default function TabLayout() {
   // if (!token) {
   //   return null; // Hoặc bạn có thể hiển thị một màn hình chờ
   // }
+  useEffect(() => {
+    // Buộc sử dụng chế độ sáng
+    Appearance.setColorScheme("light");
+  }, []);
 
   return (
     <Tabs
@@ -103,7 +106,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Trang chủ",
-          header: CustomHeader,
+          header: HomeHeader,
           tabBarIcon: ({ color, focused }) => (
             <View>
               {focused ? (
@@ -117,9 +120,9 @@ export default function TabLayout() {
                   style={{ width: 24, height: 24 }}
                 />
               )}
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>3</Text>
-              </View>
+              {/* <View style={styles.badge}>
+                <Text style={styles.badgeText}>0</Text>
+              </View> */}
             </View>
           ),
         }}
@@ -127,6 +130,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="orders"
         options={{
+          title: "Đơn hàng",
           header: (props: BottomTabHeaderProps) => (
             <OrderHeader
               open={false}
@@ -218,7 +222,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "white",
     alignItems: "center",
-    marginTop: 60,
+    paddingTop: 40,
     height: 60,
   },
   headerTitle: {

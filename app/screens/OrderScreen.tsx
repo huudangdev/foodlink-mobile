@@ -1,7 +1,5 @@
 import { View, Text } from "@/components/Themed";
-import { FontAwesome, EvilIcons } from "@expo/vector-icons";
-import { Divider } from "@rneui/themed";
-import Icon from "@rneui/themed/dist/Icon";
+import { Icon } from "@rneui/base";
 import { router } from "expo-router";
 import React, { useState, useEffect } from "react";
 import {
@@ -11,105 +9,55 @@ import {
   TouchableOpacity,
   Pressable,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { Image } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
 import { getGrabFoodOrders } from "../services/grabfood";
 import { useRoute } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
+import useFetchOrders from "../hooks/useFetchOrders";
+import { useOrders } from "../context/OrderContext";
 
-const orders = [
-  {
-    id: "GF2047",
-    customer: "Nguyễn Cao Nam",
-    deliveryTime: "10:00",
-    platform: "ShopeeFood",
-    items: [
-      { name: "Bánh trung thu Songpyeon", price: 45000, quantity: 2 },
-      { name: "Bánh Hotteok – bánh Pancake", price: 45000, quantity: 2 },
-    ],
-    totalItems: 4,
-    totalPrice: 180000,
-    status: "Đơn mới",
-  },
-  {
-    id: "GF2040",
-    customer: "Nguyễn Cao Nam",
-    deliveryTime: "10:00",
-    platform: "ShopeeFood",
-    items: [
-      { name: "Bánh trung thu Songpyeon", price: 45000, quantity: 2 },
-      { name: "Bánh Hotteok – bánh Pancake", price: 45000, quantity: 2 },
-    ],
-    totalItems: 4,
-    totalPrice: 180000,
-    status: "Đơn mới",
-  },
-  {
-    id: "GF2048",
-    customer: "Nguyễn Văn An",
-    deliveryTime: "11:00",
-    platform: "GrabFood",
-    items: [
-      { name: "Bánh mì chay", price: 35000, quantity: 3 },
-      { name: "Cơm rang dưa bò", price: 50000, quantity: 1 },
-    ],
-    totalItems: 4,
-    totalPrice: 200000,
-    status: "Đang xử lý",
-  },
-  {
-    id: "GF2049",
-    customer: "Nguyễn Thị Lan",
-    deliveryTime: "12:00",
-    platform: "ShopeeFood",
-    items: [
-      { name: "Bánh xèo", price: 40000, quantity: 2 },
-      { name: "Cơm hến", price: 30000, quantity: 2 },
-    ],
-    totalItems: 4,
-    totalPrice: 140000,
-    status: "Đã hoàn thành",
-  },
-  {
-    id: "GF2050",
-    customer: "Nguyễn Văn B",
-    deliveryTime: "13:00",
-    platform: "GrabFood",
-    items: [
-      { name: "Bánh mì chay", price: 35000, quantity: 3 },
-      { name: "Cơm rang dưa bò", price: 50000, quantity: 1 },
-    ],
-    totalItems: 4,
-    totalPrice: 200000,
-    status: "Đơn mới",
-  },
-  {
-    id: "GF2051",
-    customer: "Nguyễn Thị C",
-    deliveryTime: "14:00",
-    platform: "ShopeeFood",
-    items: [
-      { name: "Bánh xèo", price: 40000, quantity: 2 },
-      { name: "Cơm hến", price: 30000, quantity: 2 },
-    ],
-    totalItems: 4,
-    totalPrice: 140000,
-    status: "Đang xử lý",
-  },
-];
+interface Order {
+  items: any;
+  id: string;
+  customer: string;
+  status: string;
+  platform: string;
+  createdAt: string;
+  displayID: string;
+  deliveryStatus: string;
+  orderDetails: {
+    eater: {
+      name: string;
+    };
+    itemInfo: {
+      items: Array<{
+        name: string;
+        quantity: number;
+        price: {
+          toLocaleString: () => string;
+        };
+      }>;
+      count: number;
+    };
+    orderValue: string;
+  };
+  cancelledOriginalPriceDisplay?: {
+    toLocaleString: () => string;
+  };
+}
 
 const Order = () => {
-  const [orders, setOrders] = useState([]);
+  const { orders, loading, error } = useOrders();
 
-  //const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<unknown>(null);
+  // const [orders, setOrders] = useState<Order[]>([]);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState<Error | null>(null);
 
-  const [searchText, setSearchText] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("GrabFood");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("Đơn mới");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedDate, setSelectedDate] = useState(
     new Date().toLocaleDateString()
   );
@@ -123,90 +71,44 @@ const Order = () => {
     clientSecret: string;
   };
 
-  const route = useRoute();
-  const { clientId = "", clientSecret = "" } = route.params
-    ? (route.params as RouteParams)
-    : {};
-
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const endTime = new Date().toISOString();
-        const startTime = new Date(
-          new Date().setDate(new Date().getDate() - 29)
-        ).toISOString();
-        const pageIndex = 0;
-        const pageSize = 100;
-        const grabFoodToken = user?.grabFoodToken;
-
-        // Lấy danh sách order
-        const ordersData = await getGrabFoodOrders(
-          startTime,
-          endTime,
-          pageIndex,
-          pageSize,
-          grabFoodToken
-        );
-        setOrders(ordersData.statements);
-      } catch (error) {
-        setError(error);
-        console.error("Error fetching orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-    const intervalId = setInterval(fetchOrders, 10000); // Fetch every 5 seconds
-
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
-    //console.log("orders:", orders);
-  }, []);
-
-  useEffect(() => {
-    filterOrders();
-  }, [searchTerm, selectedStatus, selectedPlatform]);
+    setFilteredOrders(orders);
+  }, [orders]);
 
   const handleOrderPress = (order: Order) => {
     router.push({
       pathname: "/screens/OrderDetail",
-      params: { order: JSON.stringify(order) },
+      params: { info: JSON.stringify(order) },
     });
-  };
-
-  const filterOrders = () => {
-    let filtered = orders;
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (order) =>
-          order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.items.some((item) =>
-            item.name.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-      );
-    }
-
-    if (selectedStatus !== "All") {
-      filtered = filtered.filter((order) => order.status === selectedStatus);
-    }
-
-    if (selectedPlatform !== "All") {
-      filtered = filtered.filter(
-        (order) => order.platform === selectedPlatform
-      );
-    }
-
-    setFilteredOrders(filtered);
   };
 
   const handleSearch = (text: string) => {
     setSearchTerm(text);
+    const filtered = orders.filter(
+      (order) =>
+        (order?.orderDetails?.eater?.name
+          ?.toLowerCase()
+          .includes(text?.toLowerCase()) ||
+          order?.displayID?.toLowerCase().includes(text?.toLowerCase())) &&
+        (selectedStatus === "" ||
+          order.deliveryStatus?.split("_")[0] === selectedStatus)
+    );
+    setFilteredOrders(filtered);
   };
 
   const handleFilter = (status: string) => {
     setSelectedStatus(status);
+    const filtered = orders.filter(
+      (order) =>
+        (order?.orderDetails?.eater?.name
+          .toLowerCase()
+          .includes(searchTerm?.toLowerCase()) ||
+          order?.displayID
+            ?.toLowerCase()
+            .includes(searchTerm?.toLowerCase())) &&
+        (status === "" || order.deliveryStatus?.split("_")[0] === status)
+    );
+    setFilteredOrders(filtered);
   };
 
   const handlePlatformChange = (platform: string) => {
@@ -215,19 +117,47 @@ const Order = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Đơn mới":
-        return "#FFA000"; // Amber
-      case "Đã hoàn thành":
+      case "COMPLETED":
         return "#4CAF50"; // Green
-      case "Đang xử lý":
+      case "PREPARING":
         return "#2196F3"; // Blue
+      case "CANCELLED":
+        return "#F44336"; // Red
       default:
-        return "#000000"; // Black
+        return "#FFA000"; // Orange
+    }
+  };
+
+  const getTags = (order: any) => {
+    const tags: String[] = [];
+    if (order.isAcceptedByAA) tags.push("Xác nhận tự động");
+    if (order.isTakeawayOrder) tags.push("Đơn tự đến lấy");
+    if (order.isOrderEdited) tags.push("Đơn đã chỉnh sửa");
+    if (order.isPaxNewCustomer) tags.push("Khách hàng mới");
+    if (order.isPreparationTaskDelayed) tags.push("Đơn trễ");
+    if (order.isScheduledOrder) tags.push("Đơn đặt trước");
+    return tags;
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "COMPLETED":
+        return "Đơn hoàn thành";
+      case "PREPARING":
+        return "Đang xử lý";
+      case "CANCELLED":
+        return "Đã hủy";
+      default:
+        return "Đơn mới";
     }
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <Pressable style={styles.card} onPress={() => handleOrderPress(item)}>
+    <Pressable
+      style={styles.card}
+      onPress={() => handleOrderPress(item)}
+      key={item.displayID}
+    >
       {/* Customer and Order Information */}
       <View style={styles.header}>
         <Image
@@ -240,29 +170,30 @@ const Order = () => {
         />
         <View>
           <Text style={styles.customer}>
-            {item.orderDetails &&
-              item.orderDetails.eater &&
-              item.orderDetails.eater.name}
+            {item && item.eater && item.eater.name
+              ? `Khách hàng: ${item.eater.name}`
+              : "Khách hàng: ***"}
           </Text>
           <Text style={styles.orderId}>Order ID: {item.displayID}</Text>
           <Text style={styles.deliveryTime}>
-            Được tạo lúc: {new Date(item.createdAt).toLocaleTimeString()}
+            Được tạo lúc:{" "}
+            {new Date(item.createdAt).toLocaleString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}
           </Text>
+          <View style={styles.tagsContainer}>
+            {getTags(item).map((tag, index) => (
+              <Text key={index} style={styles.tag}>
+                {tag}
+              </Text>
+            ))}
+          </View>
         </View>
-      </View>
-
-      {/* Status and Platform */}
-      <View style={styles.statusRow}>
-        <TouchableOpacity
-          style={[
-            styles.statusButton,
-            { backgroundColor: getStatusColor(item.status) },
-          ]}
-        >
-          <Text style={[styles.statusText, { color: "white" }]}>
-            {item.deliveryStatus.split("_")[0]}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* Order Items */}
@@ -313,7 +244,6 @@ const Order = () => {
             },
             index: React.Key | null | undefined
           ) => {
-            console.log("item:", item);
             return (
               <View key={index} style={styles.itemRow}>
                 {/* <Image
@@ -326,7 +256,6 @@ const Order = () => {
                 </View>
                 <Text style={styles.itemPrice}>
                   {/* {item.price.toLocaleString()} VND */}
-                  75.000 VND
                 </Text>
               </View>
             );
@@ -335,13 +264,30 @@ const Order = () => {
 
       {/* Footer with Total */}
       <View style={styles.footer}>
-        <Text style={styles.totalItems}>
-          Số món:{" "}
-          {(item.orderDetails &&
-            item.orderDetails.itemInfo &&
-            item.orderDetails.itemInfo.count) ||
-            0}
-        </Text>
+        {/* <Text style={styles.totalItems}>
+                  Số món:{" "}
+                  {order.orderDetails &&
+                  order.orderDetails.itemInfo &&
+                  typeof order.orderDetails.itemInfo.count === "number"
+                    ? order.orderDetails.itemInfo.count
+                    : 0}
+                </Text> */}
+        {/* <View style={styles.statusRow}> */}
+        <TouchableOpacity
+          style={[
+            styles.statusButton,
+            {
+              backgroundColor: getStatusColor(
+                item.deliveryStatus.split("_")[0]
+              ),
+            },
+          ]}
+        >
+          <Text style={[styles.statusText, { color: "white" }]}>
+            {getStatusText(item.deliveryStatus.split("_")[0])}
+          </Text>
+        </TouchableOpacity>
+        {/* </View> */}
         <Text style={styles.totalPrice}>
           {(item.orderDetails && item.orderDetails.orderValue) ||
             (item.cancelledOriginalPriceDisplay &&
@@ -352,18 +298,26 @@ const Order = () => {
     </Pressable>
   );
 
-  if (loading) {
+  if (error) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.errorText}>Error: {error?.message}</Text>
       </View>
     );
   }
 
-  if (error) {
+  if (!user?.grabFoodToken && !user?.shopeeFoodToken) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Error: {error.message}</Text>
+      <View style={styles.centeredContent}>
+        <Text style={styles.loginPrompt}>
+          Hãy đăng nhập vào ứng dụng Food App đầu tiên của bạn để xem đơn hàng.
+        </Text>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => router.push("/screens/DrawerScreen")}
+        >
+          <Text style={styles.loginButtonText}>Kết nối ngay</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -375,98 +329,132 @@ const Order = () => {
           <Icon name="search" size={20} color="#6e6e6e" style={styles.icon} />
           <TextInput
             style={styles.input}
-            placeholder="Search your order"
+            placeholder="Tìm kiếm theo tên khách hàng hoặc ID..."
             placeholderTextColor="#6e6e6e"
             value={searchTerm}
             onChangeText={handleSearch}
           />
         </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "flex-start",
-            marginTop: 8,
-          }}
-        >
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              {
-                borderRadius: 20,
-                backgroundColor:
-                  selectedStatus === "Đơn mới" ? "#FFA000" : "#F5F5F5",
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                marginRight: 8,
-              },
-            ]}
-            onPress={() => handleFilter("Đơn mới")}
-          >
-            <Text
-              style={[
-                styles.filterButtonText,
-                { color: selectedStatus === "Đơn mới" ? "white" : "black" },
-              ]}
-            >
-              Tất cả
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              {
-                borderRadius: 20,
-                backgroundColor:
-                  selectedStatus === "Đang xử lý" ? "#FFA000" : "#F5F5F5",
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                marginRight: 8,
-              },
-            ]}
-            onPress={() => handleFilter("Đang xử lý")}
-          >
-            <Text
-              style={[
-                styles.filterButtonText,
-                { color: selectedStatus === "Đang xử lý" ? "white" : "black" },
-              ]}
-            >
-              Đang xử lý
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              {
-                borderRadius: 20,
-                backgroundColor:
-                  selectedStatus === "Đơn hoàn thành" ? "#FFA000" : "#F5F5F5",
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-              },
-            ]}
-            onPress={() => handleFilter("Đơn hoàn thành")}
-          >
-            <Text
-              style={[
-                styles.filterButtonText,
-                {
-                  color:
-                    selectedStatus === "Đơn hoàn thành" ? "white" : "black",
-                },
-              ]}
-            >
-              Đơn hoàn thành
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          margin: 16,
+          marginTop: 0,
+        }}
+      >
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            {
+              borderRadius: 20,
+              backgroundColor: selectedStatus === "" ? "#FFA000" : "#F5F5F5",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              marginRight: 8,
+            },
+          ]}
+          onPress={() => handleFilter("")}
+        >
+          <Text
+            style={[
+              styles.filterButtonText,
+              { color: selectedStatus === "" ? "white" : "black" },
+            ]}
+          >
+            Tất cả
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            {
+              borderRadius: 20,
+              backgroundColor:
+                selectedStatus === "PREPARING" ? "#FFA000" : "#F5F5F5",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              marginRight: 8,
+            },
+          ]}
+          onPress={() => handleFilter("PREPARING")}
+        >
+          <Text
+            style={[
+              styles.filterButtonText,
+              { color: selectedStatus === "PREPARING" ? "white" : "black" },
+            ]}
+          >
+            Đang xử lý
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            {
+              borderRadius: 20,
+              backgroundColor:
+                selectedStatus === "COMPLETED" ? "#FFA000" : "#F5F5F5",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+            },
+          ]}
+          onPress={() => handleFilter("COMPLETED")}
+        >
+          <Text
+            style={[
+              styles.filterButtonText,
+              {
+                color: selectedStatus === "COMPLETED" ? "white" : "black",
+              },
+            ]}
+          >
+            Đơn hoàn thành
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            {
+              borderRadius: 20,
+              backgroundColor:
+                selectedStatus === "CANCELLED" ? "#FFA000" : "#F5F5F5",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+            },
+          ]}
+          onPress={() => handleFilter("CANCELLED")}
+        >
+          <Text
+            style={[
+              styles.filterButtonText,
+              {
+                color: selectedStatus === "CANCELLED" ? "white" : "black",
+              },
+            ]}
+          >
+            Huỷ
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text
+        style={{
+          textAlign: "center",
+          color: "gray",
+          fontFamily: "thin",
+          marginTop: 16,
+        }}
+      >
+        *Danh sách chỉ hiển thị các đơn hàng trong phạm vi 30 ngày.
+      </Text>
 
       {/* List of Orders */}
       <FlatList
-        data={orders}
-        keyExtractor={(item) => item.id}
+        data={filteredOrders}
+        keyExtractor={(item, index) => index.toLocaleString()}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
       />
@@ -477,17 +465,42 @@ const Order = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0, // Adjust this value as needed
+    width: "100%", // Ensure the container takes the full width of the screen
+  },
+  centeredContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 16,
+  },
+  loginPrompt: {
+    fontSize: 18,
+    textAlign: "center",
+    marginBottom: 16,
+    alignItems: "center",
+  },
+  loginButton: {
+    backgroundColor: "#FFA000",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  loginButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   header: {
     flexDirection: "row",
-    marginBottom: 8,
+    marginBottom: 10,
+    backgroundColor: "#F8F8F8",
   },
   searchContainer: {
-    padding: 16,
-    backgroundColor: "#FFF",
-    elevation: 2,
-    paddingHorizontal: 32,
+    //padding: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    paddingHorizontal: 16,
   },
   statusRow: {
     flexDirection: "row",
@@ -538,6 +551,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#eee",
     paddingTop: 10,
+    backgroundColor: "#F8F8F8",
   },
   totalItems: {
     fontWeight: "bold",
@@ -575,20 +589,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   card: {
-    backgroundColor: "#FFF",
-    borderRadius: 8,
-    padding: 24,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 15,
+    padding: 16,
+    margin: 4,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
+    shadowRadius: 4,
     elevation: 2,
-    marginVertical: 8,
+    width: Dimensions.get("window").width - 24,
+    height: Dimensions.get("window").height / 4.5, // Reduce the height of the card
   },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
+    backgroundColor: "#F8F8F8",
   },
   platformLogo: {
     width: 32,
@@ -599,10 +616,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#555",
+    backgroundColor: "#F8F8F8",
   },
   orderId: {
     color: "#555",
     fontSize: 14,
+    backgroundColor: "#F8F8F8",
   },
   status: {
     color: "white",
@@ -622,6 +641,7 @@ const styles = StyleSheet.create({
   deliveryTime: {
     fontSize: 14,
     color: "#888",
+    backgroundColor: "#F8F8F8",
   },
   item: {
     flexDirection: "row",
@@ -636,6 +656,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "right",
     marginTop: 10,
+    backgroundColor: "#F8F8F8",
   },
   searchBar: {
     flexDirection: "row",
@@ -661,15 +682,31 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   listContent: {
-    paddingBottom: 16,
-    margin: 24,
-    marginTop: 0,
+    //marginTop: -8,
+    width: Dimensions.get("window").width,
+    paddingHorizontal: 8,
   },
   errorText: {
     color: "red",
     fontSize: 16,
     textAlign: "center",
     marginTop: 20,
+  },
+  tagsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingTop: 8,
+    backgroundColor: "#F8F8F8",
+  },
+  tag: {
+    backgroundColor: "#fefae0",
+    color: "dark",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginRight: 8,
+    marginBottom: 8,
+    fontSize: 12,
   },
 });
 

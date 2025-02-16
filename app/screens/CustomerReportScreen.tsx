@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,40 +9,122 @@ import {
   Dimensions,
 } from "react-native";
 import { BarChart } from "react-native-chart-kit";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import DatePicker from "react-native-ui-datepicker";
+import Icon from "react-native-vector-icons/FontAwesome";
 import { useRouter } from "expo-router";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { useAuth } from "../context/AuthContext";
+import { getGrabFoodOrders } from "../services/grabfood";
+import { useOrders } from "../context/OrderContext";
 
 const CustomerReportScreen = () => {
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(today.getDate() - 30);
+  const { orders, loading, error, totalRevenue } = useOrders();
+
   const router = useRouter();
+  const { user } = useAuth();
   const [date, setDate] = React.useState(new Date());
-  const [showDatePicker, setShowDatePicker] = React.useState(false);
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [startDate, setStartDate] = useState(thirtyDaysAgo);
+  const [endDate, setEndDate] = useState(today);
+  const [isStartDatePickerVisible, setStartDatePickerVisibility] =
+    useState(false);
+  const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
+
+  const [newCustomersCount, setNewCustomersCount] = useState(0);
+  const [returningCustomersCount, setReturningCustomersCount] = useState(0);
+  const [dailyNewCustomers, setDailyNewCustomers] = useState<number[]>([]);
+  const [dailyReturningCustomers, setDailyReturningCustomers] = useState<
+    number[]
+  >([]);
+
+  const handleConfirmStartDate = (date: any) => {
+    setStartDate(date);
+    setStartDatePickerVisibility(false);
+  };
+
+  const handleConfirmEndDate = (date: any) => {
+    setEndDate(date);
+    setEndDatePickerVisibility(false);
+  };
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      //setLoading(true);
+      try {
+        // Đếm số lượng khách hàng mới và khách hàng quay lại
+        let newCustomers = 0;
+        let returningCustomers = 0;
+        const dailyNew = Array(30).fill(0);
+        const dailyReturning = Array(30).fill(0);
+
+        orders.forEach((order: any) => {
+          const orderDate = new Date(order.createdAt);
+          const dayIndex = Math.floor(
+            (today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (dayIndex < 30) {
+            if (order.isPaxNewCustomer) {
+              newCustomers++;
+              dailyNew[dayIndex]++;
+            } else {
+              returningCustomers++;
+              dailyReturning[dayIndex]++;
+            }
+          }
+        });
+
+        setNewCustomersCount(newCustomers);
+        setReturningCustomersCount(returningCustomers);
+        setDailyNewCustomers(dailyNew.reverse());
+        setDailyReturningCustomers(dailyReturning.reverse());
+      } catch (error) {
+        //setError(error);
+        console.error("Error fetching orders:", error);
+      }
+    };
+
+    if (
+      (user?.grabFoodToken && user?.grabFoodToken !== "") ||
+      (user?.shopeeFoodToken && user?.shopeeFoodToken !== "")
+    ) {
+      fetchOrders();
+    }
+  }, [user]);
 
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
 
-      {/* Date Picker */}
       <View style={styles.datePicker}>
-        {!showDatePicker ? (
-          <View style={styles.datePicker}>
-            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-              <Icon name="chevron-left" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.dateText}>Tháng 9 năm 2024</Text>
-            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-              <Icon name="chevron-right" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <DatePicker
-            mode="single"
-            date={date}
-            //onDateChange={setDate}
-            //onCloseModal={() => setShowDatePicker(false)}
-          />
-        )}
+        <TouchableOpacity onPress={() => setStartDatePickerVisibility(true)}>
+          <Icon name="calendar" size={24} color="#000" style={{ padding: 8 }} />
+        </TouchableOpacity>
+        <Text style={styles.dateText}>
+          {startDate.toLocaleDateString("vi-VN")} -{" "}
+          {endDate.toLocaleDateString("vi-VN")}
+        </Text>
       </View>
+
+      <DateTimePickerModal
+        isVisible={isStartDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirmStartDate}
+        onCancel={() => setStartDatePickerVisibility(false)}
+        maximumDate={new Date()}
+        minimumDate={new Date(new Date().setDate(new Date().getDate() - 30))}
+      />
+
+      <DateTimePickerModal
+        isVisible={isEndDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirmEndDate}
+        onCancel={() => setEndDatePickerVisibility(false)}
+        maximumDate={new Date()}
+        minimumDate={startDate}
+      />
 
       {/* Tabs */}
       <View style={styles.tabs}>
@@ -65,9 +147,9 @@ const CustomerReportScreen = () => {
           style={styles.summaryImage}
         />
         <View style={styles.summaryInfo}>
-          <Text style={styles.summaryValue}>1000 Người</Text>
-          <Text style={styles.summaryLabel}>Số lượng khách hàng</Text>
-          <Text style={styles.summaryChange}>+25%</Text>
+          <Text style={styles.summaryValue}>{newCustomersCount}</Text>
+          <Text style={styles.summaryLabel}>Khách hàng mới</Text>
+          <Text style={styles.summaryChange}></Text>
         </View>
       </View>
 
@@ -75,13 +157,15 @@ const CustomerReportScreen = () => {
       <View style={styles.statsRow}>
         {[
           {
-            label: "Khách hàng mới",
-            value: "500 người",
+            label: "Khách hàng quay lại",
+            value: `${returningCustomersCount} người`,
             image: require("../../assets/images/order-background.jpg"),
           },
           {
-            label: "Khách hàng quay lại",
-            value: "500 người",
+            label: "Tỉ lệ khách hàng quay lại",
+            value: `${Math.round(
+              (returningCustomersCount / orders.length) * 100
+            )}% `,
             image: require("../../assets/images/revenue-background.png"),
           },
         ].map((stat, index) => (
@@ -104,23 +188,35 @@ const CustomerReportScreen = () => {
           alignItems: "center",
         }}
       >
-        <Text style={styles.chartTitle}>Biểu đồ khách hàng</Text>
+        <Text style={styles.chartTitle}>
+          Biểu đồ khách hàng (7 ngày gần nhất)
+        </Text>
         <Text style={{ fontSize: 14, fontWeight: "thin", marginTop: 8 }}>
           Đơn vị: Người
         </Text>
       </View>
       <BarChart
         data={{
-          labels: [
-            "Thứ 2",
-            "Thứ 3",
-            "Thứ 4",
-            "Thứ 5",
-            "Thứ 6",
-            "Thứ 7",
-            "Chủ nhật",
+          labels: Array.from({ length: 7 }, (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6 - i));
+            return date.toLocaleDateString("vi-VN", {
+              day: "2-digit",
+              month: "2-digit",
+            });
+          }),
+          datasets: [
+            {
+              data: dailyNewCustomers.slice(-7),
+              color: (opacity = 1) => `rgba(255, 99, 132, ${opacity})`,
+              label: "Khách hàng mới",
+            },
+            {
+              data: dailyReturningCustomers.slice(-7),
+              color: (opacity = 1) => `rgba(54, 162, 235, ${opacity})`,
+              label: "Khách hàng quay lại",
+            },
           ],
-          datasets: [{ data: [700, 850, 750, 600, 800, 1200, 1300] }],
         }}
         width={Dimensions.get("window").width - 32}
         height={240}
@@ -184,6 +280,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
+  // datePicker: {
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  //   justifyContent: "space-between",
+  //   marginBottom: 16,
+  // },
+  // dateText: {
+  //   fontSize: 16,
+  //   fontWeight: "bold",
+  // },
   tabs: {
     flexDirection: "row",
     marginBottom: 24,
@@ -265,7 +371,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
@@ -288,8 +394,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     backgroundColor: "rgba(0, 0, 0, 0.5)", // Optional: to add a dark overlay
     borderRadius: 8,
-    height: "100%",
-    padding: 8,
+    height: "95%",
+    padding: 16,
   },
   statValue: {
     fontSize: 16,

@@ -1,3 +1,4 @@
+import { useAuth } from "@/app/context/AuthContext";
 import React from "react";
 import {
   View,
@@ -10,18 +11,26 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 
 const StoreScreen = () => {
+  const { user } = useAuth();
+
+  const storeInfo = user?.storeInfo?.data || {};
+
+  //console.log("Store Info:", user?.storeInfo);
+
   return (
     <View style={styles.container}>
       {/* Content */}
       <ScrollView contentContainerStyle={styles.content}>
         {/* Store Info */}
         <View style={styles.storeInfo}>
-          <Image
+          {/* <Image
             source={{ uri: "https://via.placeholder.com/80" }} // Replace with the store image URL
             style={styles.storeImage}
-          />
-          <Text style={styles.storeName}>GongCha 01-Nguyễn Văn Linh</Text>
-          <Text style={styles.storeAddress}>01- Nguyễn Văn Linh</Text>
+          /> */}
+          <Text style={styles.storeName}>{storeInfo?.name}</Text>
+          <Text style={styles.storeAddress}>
+            {storeInfo?.address?.AddressLine1}
+          </Text>
         </View>
 
         {/* Operation Hours */}
@@ -42,8 +51,8 @@ const StoreScreen = () => {
               Thông tin liên hệ của chủ/ quản lý quán
             </Text>
           </View>
-          <Text style={styles.sectionValue}>+84 901460814</Text>
-          <Text style={styles.sectionValue}>nguyenhuyen184.nue@gmail.com</Text>
+          <Text style={styles.sectionValue}>{storeInfo.mobileNumber}</Text>
+          <Text style={styles.sectionValue}>{storeInfo.email}</Text>
         </View>
 
         {/* Store Phone */}
@@ -64,7 +73,7 @@ const StoreScreen = () => {
             <Text style={styles.sectionTitle}>Địa chỉ</Text>
           </View>
           <Text style={styles.sectionValue}>
-            49 Đường số 4, Khu Phố 4, Phường An Phú, Quận 2, Q.2, 7000
+            {storeInfo?.address?.AddressLine1}
           </Text>
         </View>
       </ScrollView>
@@ -81,7 +90,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   storeInfo: {
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 48,
   },
   storeImage: {
@@ -94,6 +103,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#000",
+    marginBottom: 5,
   },
   storeAddress: {
     fontSize: 14,
@@ -148,3 +158,41 @@ const styles = StyleSheet.create({
 });
 
 export default StoreScreen;
+
+const example = {
+  data: {
+    address: {
+      AddressLine1:
+        "Số 4E đường số 6, Khu Phố 4, Phường An Phú, Quận 2, thành phố Hồ Chí Minh",
+      AddressLine2:
+        "Số 4E đường số 6, Khu Phố 4, Phường An Phú, Quận 2, thành phố Hồ Chí Minh",
+      City: "Ho Chi Minh",
+      GeoLocation: [Object],
+    },
+    analytics_id: "e89d922ca6864da39b5163fc41b9e5c3",
+    balance: 0,
+    balanceLimit: 0,
+    bank_details: {
+      account_name: "CÔNG TY TNHH THE FRESH GARDEN",
+      account_number: "....8016",
+      bank_name: "Techcombank",
+    },
+    config: {},
+    correspondence_email: "nguyenhuyen184.neu@gmail.com",
+    currency: "",
+    email: "nguyenhuyen184.neu@gmail.com",
+    mobileNumber: "84936439855",
+    name: "Green Food",
+    nmid: "",
+    qrBackgroundImage:
+      "https://dzmgxsm1og5yv.cloudfront.net/static/partner/p2m_qr_background_non_ploff.png",
+    qrCode:
+      "00020101021126550011vn.moca.www01368995a760-145d-4ddc-8dac-f7e6bb8097025204581253037045802VN5924Organic Store Green Food6011Ho Chi Minh62400507xXp8s9B07252592448d85036a29439dd833c64340002EN0124Organic Store Green Food6304DD73",
+    qrFrameImage: "",
+    qrProviderImage:
+      "https://dzmgxsm1og5yv.cloudfront.net/static/partner/p2m_qr_provider_moca.png",
+    qrType: "MOCA",
+    qrTypeImage: "",
+  },
+  error: null,
+};

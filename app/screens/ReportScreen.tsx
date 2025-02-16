@@ -1,10 +1,10 @@
 import { View } from "@/components/Themed";
-import { Icon } from "@rneui/themed";
+import { Icon } from "@rneui/base";
 import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity, Text, Linking } from "react-native";
 import RevenueReportScreen from "./RevenueReportScreen";
 import CustomerReportScreen from "./CustomerReportScreen";
-import { useRouter } from 'expo-router';
+import { useRouter } from "expo-router";
 
 const Report = () => {
   const [showRevenueReport, setShowRevenueReport] = useState(false);
@@ -24,7 +24,7 @@ const Report = () => {
   }
 
   if (showCustomerReport) {
-    return <CustomerReportScreen />
+    return <CustomerReportScreen />;
   }
 
   return (
@@ -53,23 +53,23 @@ const Report = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 16,
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f9f9f9',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#f9f9f9",
     padding: 16,
     margin: 8,
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 2,
-    width: "100%"
+    width: "100%",
   },
   iconWrapper: {
     marginRight: 16,
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   text: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: "#000",
   },
 });
 
