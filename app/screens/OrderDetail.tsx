@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Button,
   Alert,
   Linking,
 } from "react-native";
@@ -273,7 +272,7 @@ const OrderDetailsScreen = () => {
   useEffect(() => {
     const orderID = JSON.parse(info).ID;
 
-    console.log('ID: ', orderID)
+    console.log("ID: ", orderID);
     const fetchOrderDetails = async () => {
       try {
         const orderData = await getOrderDetails(
@@ -351,7 +350,7 @@ const OrderDetailsScreen = () => {
 
       // In ảnh dưới dạng Base64 thay vì URI
       await NetPrinter.printImageBase64(base64Image, {
-        imageWidth: 550,
+        imageWidth: 384, // thay đổi để phù hợp khổ in 58
         // imageHeight: 1000,
         // paddingX: 100
       });
@@ -716,7 +715,7 @@ const OrderDetailsScreen = () => {
         )}
       <ViewShot
         ref={viewShotRef}
-        options={{ format: "png", quality: 1.0 }}
+        options={{ format: "png", quality: 1.0, width: 384 }}
         style={{
           position: "absolute", // Ẩn khỏi UI
           top: -1000,
@@ -726,7 +725,7 @@ const OrderDetailsScreen = () => {
           backgroundColor: "white",
         }}
       >
-        <View style={{ padding: 5, width: "100%" }}>
+        <View style={{ padding: 5, width: 384 }}>
           <Text
             style={{
               fontSize: 18,

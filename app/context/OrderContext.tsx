@@ -71,7 +71,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       await NetPrinter.init();
       await NetPrinter.connectPrinter(printerIp, 9100);
 
-      await NetPrinter.printImageBase64(base64Image, { imageWidth: 576 });
+      await NetPrinter.printImageBase64(base64Image, { imageWidth: 384 });
 
       console.log(`✅ Đã in xong: ${text}`);
 
@@ -164,19 +164,16 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         const grabFoodToken = user?.grabFoodToken;
 
         // Fetch order history from the backend
-        let response = await axios.get(
-          "http://52.77.222.212/order-history",
-          {
-            params: {
-              startTime,
-              endTime,
-              pageIndex,
-              pageSize,
-              grabFoodToken,
-              username: user?.username,
-            },
-          }
-        );
+        let response = await axios.get("http://52.77.222.212/order-history", {
+          params: {
+            startTime,
+            endTime,
+            pageIndex,
+            pageSize,
+            grabFoodToken,
+            username: user?.username,
+          },
+        });
 
         const ordersData = response.data.orders;
         const newOrders = response.data.newOrders;
@@ -223,15 +220,12 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
 
             // Lưu thông báo vào DB
             try {
-              await axios.post(
-                "http://52.77.222.212/api/save-notification",
-                {
-                  username: user?.username,
-                  title: "Đơn hàng mới",
-                  message: `Bạn có đơn hàng mới - ${order.displayID}`,
-                  ID: order.ID,
-                }
-              );
+              await axios.post("http://52.77.222.212/api/save-notification", {
+                username: user?.username,
+                title: "Đơn hàng mới",
+                message: `Bạn có đơn hàng mới - ${order.displayID}`,
+                ID: order.ID,
+              });
               console.log("Notification saved to database");
             } catch (error) {
               console.error("Error saving notification:", error);
@@ -286,7 +280,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       {children}
       <ViewShot
         ref={viewShotRef}
-        options={{ format: "png", quality: 1.0 }}
+        options={{ format: "png", quality: 1.0, width: 384 }}
         style={{
           position: "absolute", // Ẩn khỏi UI
           top: -1000,
@@ -296,10 +290,10 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
           backgroundColor: "white",
         }}
       >
-        <View style={{ padding: 5, width: "100%" }}>
+        <View style={{ padding: 5, width: 384 }}>
           <Text
             style={{
-              fontSize: 16,
+              fontSize: 12,
               textAlign: "left",
               flexWrap: "wrap", // Cho phép text xuống dòng tự nhiên
               width: "100%", // Đảm bảo text không bị bóp

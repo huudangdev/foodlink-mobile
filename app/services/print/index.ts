@@ -73,14 +73,15 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
         order.times.acceptedAt
       ).toLocaleString()}\n`;
       text += "Đơn của ***\n\n";
-      
+
       // Số món
       text += `------------------------------- ${order.itemInfo.count} món --------------------------\n`;
       text += "✔ Cần dụng cụ ăn uốn\n";
       text +=
         "* Đối với những món đã hết, vui lòng xem ghi chú của khách hàng trên ứng dụng\n\n";
       // Danh sách món ăn
-      text += "--------------------------------------------------------------------------------------\n";
+      text +=
+        "--------------------------------------------------------------------------------------\n";
       order.itemInfo.items.forEach((item) => {
         text += `${item.quantity} x ${item.name}        ${item.fare.priceDisplay}\n`;
         item.modifierGroups.forEach((group) => {
