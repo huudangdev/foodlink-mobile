@@ -185,6 +185,14 @@ function RootLayoutNav() {
               }}
             />
             <Stack.Screen
+              name="screens/UpdatePrinterScreen"
+              options={{
+                headerShown: true,
+                title: "Cập nhật máy in",
+                headerBackTitle: "Trở lại",
+              }}
+            />
+            <Stack.Screen
               name="screens/Auth/WebViewShopeeFoodScreen"
               options={{
                 headerShown: true,

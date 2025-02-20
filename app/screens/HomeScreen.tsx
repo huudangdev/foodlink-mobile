@@ -98,7 +98,7 @@ interface Order {
 
 const Home = () => {
   //const [orders, setOrders] = useState<Order[]>([]);
-  const { orders, loading, error, totalRevenue } = useOrders();
+  const { orders, loading, error, totalRevenue, shopeeOrders } = useOrders();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
@@ -109,6 +109,8 @@ const Home = () => {
   const { user, setUser } = useAuth();
 
   const { notifications, ...userWithoutNotifications } = user || {};
+
+  //console.log('Shopee Orders: ', shopeeOrders)
 
   useEffect(() => {
     setFilteredOrders(orders);

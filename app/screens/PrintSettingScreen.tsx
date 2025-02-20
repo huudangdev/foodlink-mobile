@@ -18,14 +18,17 @@ import Modal from "react-native-modal";
 
 import TcpSocket from "react-native-tcp-socket";
 import Ping from "react-native-ping";
-
-const API_BASE_URL = "https://foodlink-api.onrender.com";
+import { NetworkInfo } from "react-native-network-info";
 
 const ScanPrinterScreen = () => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [localIP, setLocalIP] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false); // Biến trạng thái để quản lý việc hiển thị dòng chữ
+
+  useEffect(() => {
+
+  }, [user])
 
   interface Printer {
     name: string;
@@ -58,130 +61,103 @@ const ScanPrinterScreen = () => {
     });
   };
 
-  const checkPrinterPortWithTimeout = (
-    ip: string,
-    port: number,
-    timeout: number
-  ) => {
-    return new Promise((resolve) => {
-      const socket = TcpSocket.createConnection({ port, host: ip }, () => {
-        socket.destroy();
-        resolve(true); // Máy in đang mở cổng
-      });
-
-      const timer = setTimeout(() => {
-        socket.destroy();
-        resolve(false); // Timeout
-      }, timeout);
-
-      socket.on("error", () => {
-        clearTimeout(timer);
-        socket.destroy();
-        resolve(false); // Không kết nối được
-      });
-
-      socket.on("timeout", () => {
-        clearTimeout(timer);
-        socket.destroy();
-        resolve(false); // Timeout
-      });
-
-      socket.on("close", () => {
-        clearTimeout(timer);
-      });
+  const handleEditPrinter = (printer) => {
+    console.log('Printer: ', printer)
+    router.push({
+      pathname: "/screens/UpdatePrinterScreen",
+      params: { printer: JSON.stringify(printer) },
     });
   };
 
-  const checkPrinterPort = (ip, port) => {
-    console.log("Checking printer port:", ip, port);
-    return new Promise((resolve) => {
-      const socket = TcpSocket.createConnection({ port, host: ip }, () => {
-        socket.destroy();
-        resolve(true); // Máy in đang mở cổng
-      });
+  const getLocalSubnet = async (): Promise<string | null> => {
+  const ip = await NetworkInfo.getIPAddress();
+  if (ip) {
+    const parts = ip.split(".");
+    parts[3] = "";
+    return parts.join(".");
+  }
+  return null;
+};
 
-      socket.on("error", () => {
-        socket.destroy();
-        resolve(false); // Không kết nối được
-      });
-
-      socket.on("timeout", () => {
-        socket.destroy();
-        resolve(false); // Timeout
-      });
-
-      socket.on("close", () => {
-        console.log(`Connection to ${ip}:${port} closed`);
-      });
+const checkPortOpen = (ip: string, port: number, timeout = 500): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const socket = TcpSocket.createConnection({ host: ip, port }, () => {
+      socket.destroy();
+      resolve(true); // Cổng mở
     });
-  };
 
-  const scanIP = async (
-    ip: string,
-    printerPorts: number[]
-  ): Promise<Printer | undefined> => {
-    try {
-      const res = await Ping.start(ip, { timeout: 1000 });
-      console.log(`IP ${ip} is alive:`, res);
-      if (res && res !== 0) {
-        const randomGodName =
-          godNames[Math.floor(Math.random() * godNames.length)];
-        return { ip, name: randomGodName };
-      }
-    } catch (error) {
-      //console.error(`Error scanning IP ${ip}:`, error);
-    }
-    return undefined;
-  };
+    socket.on("error", () => {
+      socket.destroy();
+      resolve(false); // Cổng đóng
+    });
 
-  const MAX_CONCURRENT = 10; // Giới hạn số lượng kết nối đồng thời
+    socket.setTimeout(timeout, () => {
+      socket.destroy();
+      resolve(false); // Quá thời gian
+    });
+  });
+};
 
-  const scanPrinters = async () => {
-    console.log("Scanning printers...");
-    setPrinters([]);
-    setIsLoading(true);
-    setIsScanning(true); // Bắt đầu quét
-    let printerFound = false; // Biến cờ để kiểm tra xem máy in đã được tìm thấy hay chưa
+const pingIP = async (ip: string): Promise<boolean> => {
+  try {
+    const time = await Ping.start(ip, { timeout: 500 });
+    return time !== 0;
+  } catch {
+    return false;
+  }
+};
 
-    const subnet = "192.168.1.";
-    console.log("Scanning subnet:", subnet);
+const scanIP = async (ip: string): Promise<Printer | undefined> => {
+  const isAlive = await pingIP(ip);
+  if (isAlive) {
+    setIsLoading(false)
+    const randomName = godNames[Math.floor(Math.random() * godNames.length)];
+    console.log(`✅ Printer found: ${ip}`);
+    return { ip, name: randomName };
+  }
+  return undefined;
+};
 
-    const printerPorts = [9100, 515, 631, 139, 445];
-    const promises = [];
-    for (let i = 1; i < 255; i++) {
-      const target = `${subnet}${i}`;
-      console.log("Scanning target:", target);
-      promises.push(
-        scanIP(target, printerPorts).then((printer) => {
-          if (printer) {
-            console.log(`Printer found at: ${target}`);
-            setPrinters((prevPrinters) => [...prevPrinters, printer]);
-            if (!printerFound) {
-              printerFound = true;
-              setIsLoading(false); // Tắt modal khi tìm thấy máy in đầu tiên
-            }
-            return printer;
-          }
-        })
-      );
+const MAX_CONCURRENT = 20;
+const PRINTER_PORTS = [9100];
 
-      if (promises.length >= MAX_CONCURRENT) {
-        await Promise.allSettled(promises);
-        promises.length = 0; // Reset promises array
-      }
-    }
+const scanPrinters = async () => {
+  console.log('🚀 Bắt đầu quét máy in...');
+  setPrinters([]);
+  setIsLoading(true);
+  setIsScanning(true);
 
-    Promise.allSettled(promises).then((results) => {
+  const subnet = '192.168.1.'; // Hoặc lấy động subnet
+  const promises: Promise<Printer | undefined>[] = [];
+
+  for (let i = 2; i <= 254; i++) {
+    const targetIP = `${subnet}${i}`;
+    promises.push(scanIP(targetIP));
+
+    if (promises.length >= MAX_CONCURRENT) {
+      const results = await Promise.allSettled(promises);
       const foundPrinters = results
-        .filter((result) => result.status === "fulfilled" && result.value)
-        .map((result) => (result as PromiseFulfilledResult<any>).value);
-      setPrinters((prevPrinters) => [...prevPrinters, ...foundPrinters]);
-      setIsScanning(false); // Kết thúc quét
-      if (!printerFound) {
-        setIsLoading(false); // Tắt modal nếu không tìm thấy máy in nào
-      }
-    });
-  };
+        .filter((r): r is PromiseFulfilledResult<Printer> => r.status === "fulfilled" && r.value !== undefined)
+        .map((r) => r.value);
+
+      if (foundPrinters.length) { setIsLoading(false); console.log(`🔍 Đã tìm thấy ${foundPrinters.length} máy in`);}
+
+      setPrinters((prev) => [...prev, ...foundPrinters]);
+      promises.length = 0; // Reset batch
+    }
+  }
+
+  // Quét nốt IP còn lại
+  const finalResults = await Promise.allSettled(promises);
+  const finalPrinters = finalResults
+    .filter((r): r is PromiseFulfilledResult<Printer> => r.status === "fulfilled" && r.value !== undefined)
+    .map((r) => r.value);
+
+  setPrinters((prev) => [...prev, ...finalPrinters]);
+  setIsLoading(false);
+  setIsScanning(false);
+  console.log("✅ Hoàn tất quét máy in.");
+};
 
   const handleTestPrint = async (printer: any) => {
     console.log("Testing print on printer:", printer);
@@ -221,7 +197,7 @@ const ScanPrinterScreen = () => {
           <TouchableOpacity
             style={styles.menuItem}
             key={index}
-            //onPress={() => handleOrderPress(printer)}
+            onPress={() => handleEditPrinter(printer)}
           >
             <Image source={Printer} style={{ width: 30, height: 24 }} />
             <Text style={styles.menuText}>{printer.name}</Text>
@@ -310,7 +286,7 @@ const ScanPrinterScreen = () => {
         </TouchableOpacity>
       ))}
       {isScanning && !isLoading && (
-        <Text style={styles.scanningText}>Vẫn đang tiếp tục quét...</Text>
+        <Text style={styles.scanningText}>🔎 Vẫn đang tiếp tục quét...</Text>
       )}
     </View>
   );

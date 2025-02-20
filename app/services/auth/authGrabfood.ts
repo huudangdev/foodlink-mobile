@@ -3,7 +3,7 @@
 
 // //import { URL_DEVELOPMENT } from "@env";
 
-// const API_BASE_URL = "https://foodlink-api.onrender.com";
+// const API_BASE_URL = "http://52.77.222.212";
 
 // const API_URL = "https://merchant.grab.com/mex-core-api/user-profile/v1/login";
 
@@ -85,7 +85,7 @@
 
 import axios from "axios";
 
-const API_BASE_URL = "https://foodlink-api.onrender.com";
+const API_BASE_URL = "http://52.77.222.212";
 const API_URL = "https://api.grab.com/mex-app/troy/user-profile/v1/login";
 
 interface LoginRequest {

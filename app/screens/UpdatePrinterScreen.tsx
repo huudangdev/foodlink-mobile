@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRoute } from "@react-navigation/native";
 import {
   View,
@@ -11,53 +11,57 @@ import {
 import { router } from "expo-router";
 import RNPickerSelect from "react-native-picker-select";
 import { useAuth } from "../context/AuthContext";
-import { savePrinterToDB } from "../services/print";
+import axios from "axios";
 
 type RouteParams = {
   printer: string;
 };
 
-const AddPrinterScreen = () => {
+const UpdatePrinterScreen = () => {
   const route = useRoute();
-  const { printer } = route.params as RouteParams;
-
   const { user, setUser } = useAuth();
+  const [printerId, setPrinterId] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [ip, setIp] = useState("");
+  const [type, setType] = useState("");
+  const [port, setPort] = useState("");
 
-  const data = JSON.parse(printer);
-  const [printerIP, setPrinterIP] = useState(data.ip);
-  const [printerName, setPrinterName] = useState(data.name);
-  const [printerType, setPrinterType] = useState("customer"); // customer, restaurant, label
-  const [printerPort, setPrinterPort] = useState("9100");
-
-  const savePrinter = async (
-    printerName: any,
-    printerIP: any,
-    printerType: any,
-    port: any,
-    username: any
-  ) => {
-    // Lưu thông tin máy in
-    if (!username) {
-      username = "dang.nguyentranhuu@gmail.com";
+  useEffect(() => {
+    // Kiểm tra xem có thông tin máy in nào được truyền vào không
+    const { printer } = route.params as RouteParams || {};
+    const data = JSON.parse(printer);
+    if (data) {
+      setPrinterId(data.index);
+      setName(data.name);
+      setIp(data.ip);
+      setType(data.type);
+      setPort(data.port);
     }
+  }, [route.params]);
+
+  const handleSubmit = async () => {
     try {
-      const result = await savePrinterToDB(
-        printerName,
-        printerIP,
-        printerType,
-        port,
-        username
-      );
-      setUser((prevUser) => ({
+        // Cập nhật máy in đã lưu
+        await axios.put(`http://52.77.222.212/api/update-printer/${printerId}`, {
+          name,
+          ip,
+          type,
+          port,
+          username: user?.username,
+        });
+        setUser((prevUser) => ({
         ...prevUser,
-        printers: [...(prevUser?.printers || []), {name: printerName, ip: printerIP, type: printerType, port: printerPort, index: prevUser?.printers?.length}]
+        printers: prevUser?.printers.map((printer) => 
+          printer.index === printerId 
+            ? { ...printer, name, ip, type, port } 
+            : printer
+        )
       }));
-      Alert.alert("Thành công", "Lưu máy in thành công");
-      router.back();
-      console.log("Printer saved:", result);
+        Alert.alert("Thành công", "Cập nhật máy in thành công");
+        router.back();
     } catch (error) {
-      Alert.alert("Lỗi", "Thất bại khi lưu máy in");
       console.error("Error saving printer:", error);
+      Alert.alert("Lỗi", "Có lỗi xảy ra khi lưu máy in");
     }
   };
 
@@ -69,8 +73,8 @@ const AddPrinterScreen = () => {
 
         <TextInput
           style={styles.input}
-          value={printerIP}
-          onChangeText={setPrinterIP}
+          value={ip}
+          onChangeText={setIp}
           placeholder="Nhập địa chỉ IP"
         />
 
@@ -85,8 +89,8 @@ const AddPrinterScreen = () => {
         <Text style={styles.label}>Port</Text>
         <TextInput
           style={styles.input}
-          value={printerPort}
-          onChangeText={setPrinterPort}
+          value={port}
+          onChangeText={setPort}
           placeholder="Nhập port máy in"
         />
       </View>
@@ -96,8 +100,8 @@ const AddPrinterScreen = () => {
         <Text style={styles.label}>Tên máy in</Text>
         <TextInput
           style={styles.input}
-          value={printerName}
-          onChangeText={setPrinterName}
+          value={name}
+          onChangeText={setName}
           placeholder="Nhập tên máy in mà bạn muốn để dễ nhận biết"
         />
       </View>
@@ -106,7 +110,7 @@ const AddPrinterScreen = () => {
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Loại máy in</Text>
         <RNPickerSelect
-          onValueChange={(value) => setPrinterType(value)}
+          onValueChange={(value) => setType(value)}
           items={[
             { label: "In bill cho khách", value: "customer" },
             { label: "In bill cho quán", value: "restaurant" },
@@ -121,17 +125,9 @@ const AddPrinterScreen = () => {
       {/* Save Button */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() =>
-          savePrinter(
-            printerName,
-            printerIP,
-            printerType,
-            printerPort,
-            user?.email
-          )
-        }
+        onPress={() => handleSubmit()}
       >
-        <Text style={styles.buttonText}>Thêm máy in</Text>
+        <Text style={styles.buttonText}>Cập nhật máy in</Text>
       </TouchableOpacity>
     </View>
   );
@@ -230,4 +226,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddPrinterScreen;
+export default UpdatePrinterScreen;

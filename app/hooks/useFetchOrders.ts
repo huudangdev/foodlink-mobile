@@ -23,7 +23,7 @@ const useFetchOrders = () => {
 
         // Fetch order history from the backend
         const response = await axios.get(
-          "https://foodlink-api.onrender.com/order-history",
+          "http://52.77.222.212/order-history",
           {
             params: {
               startTime,

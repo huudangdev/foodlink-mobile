@@ -14,26 +14,6 @@ import ViewShot, { captureRef } from "react-native-view-shot";
 import * as Notifications from "expo-notifications";
 import { View, Text } from "react-native";
 import RNFS from "react-native-fs";
-import { PermissionsAndroid } from "react-native";
-
-async function requestStoragePermission() {
-  try {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-      {
-        title: "Storage Permission",
-        message: "App needs access to your storage to print the image",
-        buttonNeutral: "Ask Me Later",
-        buttonNegative: "Cancel",
-        buttonPositive: "OK",
-      }
-    );
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
-  } catch (err) {
-    console.warn(err);
-    return false;
-  }
-}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -48,6 +28,7 @@ interface OrderContextProps {
   loading: boolean;
   error: Error | null;
   totalRevenue: number;
+  shopeeOrders: any[];
 }
 
 const OrderContext = createContext<OrderContextProps | undefined>(undefined);
@@ -59,21 +40,14 @@ interface OrderProviderProps {
 export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
   const { user, token } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
+  const [shopeeOrders, setShopeeOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [printText, setPrintText] = useState<string | null>(null); // Lưu nội dung in
+  const [notifiedOrders, setNotifiedOrders] = useState<Set<string>>(new Set()); // Thêm state để theo dõi các đơn hàng đã thông báo
 
   const viewShotRef = useRef(null);
-
-  const waitForFile = async (filePath, maxRetries = 10, delay = 500) => {
-    for (let i = 0; i < maxRetries; i++) {
-      const exists = await RNFS.exists(filePath);
-      if (exists) return true;
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-    return false;
-  };
 
   const printBitmapOrder = async (text, printerIp) => {
     try {
@@ -141,7 +115,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       console.error("Error printing order details:", error);
     }
   };
-
   const getIPPrinter = (printerType: string) => {
     let ip = "";
     user?.printers.forEach((printer) => {
@@ -191,8 +164,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         const grabFoodToken = user?.grabFoodToken;
 
         // Fetch order history from the backend
-        const response = await axios.get(
-          "https://foodlink-api.onrender.com/order-history",
+        let response = await axios.get(
+          "http://52.77.222.212/order-history",
           {
             params: {
               startTime,
@@ -206,6 +179,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         );
 
         const ordersData = response.data.orders;
+        const newOrders = response.data.newOrders;
+        const updatedOrders = response.data.updatedOrders;
 
         console.log(
           "Orders fetched new:",
@@ -224,10 +199,14 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         );
         setTotalRevenue(totalRev * 1000);
 
-        for (const order of ordersData) {
-          //console.log("Order to Noti:", order.displayID);
-          //console.log("New order:", order.isNew);
-          if (order.isNew) {
+        //response = await axios.get(
+        //  "http://52.77.222.212/shopeefood/orders"
+        //);
+        //const shopeeOrderData = response.data.orders;
+        //setShopeeOrders(shopeeOrderData);
+
+        for (const order of newOrders) {
+          if (!notifiedOrders.has(order.displayID)) {
             console.log("New order:", order.displayID);
             await Notifications.scheduleNotificationAsync({
               content: {
@@ -237,9 +216,51 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
               trigger: null,
             });
 
+            // Thêm đơn hàng vào danh sách đã thông báo
+            setNotifiedOrders((prev) => new Set(prev).add(order.displayID));
+
             order.isNew = false;
 
+            // Lưu thông báo vào DB
+            try {
+              await axios.post(
+                "http://52.77.222.212/api/save-notification",
+                {
+                  username: user?.username,
+                  title: "Đơn hàng mới",
+                  message: `Bạn có đơn hàng mới - ${order.displayID}`,
+                  ID: order.ID,
+                }
+              );
+              console.log("Notification saved to database");
+            } catch (error) {
+              console.error("Error saving notification:", error);
+            }
+
             processPrintQueue(order);
+          }
+        }
+        for (const order of updatedOrders) {
+          console.log("Updated order:", order.displayID);
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Đơn hàng cập nhật",
+              body: `Bạn có đơn hàng ${order.displayID} vừa được cập nhật`,
+            },
+            trigger: null,
+          });
+
+          // Lưu thông báo vào DB
+          try {
+            await axios.post("http://52.77.222.212/api/save-notification", {
+              username: user?.username,
+              title: "Đơn hàng cập nhật",
+              message: `Bạn có đơn hàng ${order.displayID} vừa được cập nhật`,
+              ID: order.ID,
+            });
+            console.log("Notification saved to database");
+          } catch (error) {
+            console.error("Error saving notification:", error);
           }
         }
       } catch (error) {
@@ -259,7 +280,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
   }, [user]);
 
   return (
-    <OrderContext.Provider value={{ orders, loading, error, totalRevenue }}>
+    <OrderContext.Provider
+      value={{ orders, loading, error, totalRevenue, shopeeOrders }}
+    >
       {children}
       <ViewShot
         ref={viewShotRef}

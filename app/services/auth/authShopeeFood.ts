@@ -8,7 +8,7 @@ export const saveShopeeFoodToken = async (
   console.log("Saving ShopeeFood token:", shopeeFoodToken, username);
   try {
     const response = await axios.post(
-      "https://foodlink-api.onrender.com/auth/login-shopeefood",
+      "http://52.77.222.212/auth/login-shopeefood",
       {
         shopeeFoodToken,
         shopeeFoodTokenExpiration: new Date(Date.now() + 3600 * 100000 * 10), // Giả sử token có thời hạn 10 giờ

@@ -4,7 +4,7 @@ import axios from "axios";
 
 //import { URL_DEVELOPMENT } from "@env";
 
-const API_BASE_URL = "https://foodlink-api.onrender.com";
+const API_BASE_URL = "http://52.77.222.212";
 
 export const getGrabFoodOrders = async (
   startTime: string,

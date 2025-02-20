@@ -9,11 +9,13 @@ import {
   Alert,
   AppState,
   AppStateStatus,
+  ActivityIndicator,
 } from "react-native";
 import axios from "axios";
 import { useAuth } from "@/app/context/AuthContext";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
+import { useOrders } from "../context/OrderContext";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -97,7 +99,6 @@ interface Order {
     eater?: { name: string };
   };
 }
-
 const NotificationScreen = () => {
   const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState("Tất cả");
@@ -108,6 +109,9 @@ const NotificationScreen = () => {
         notification.title === "Đơn hàng cập nhật"
     ) || []
   );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { orders } = useOrders();
 
   interface Notification {
     id: string;
@@ -123,129 +127,49 @@ const NotificationScreen = () => {
   const [appState, setAppState] = useState(AppState.currentState);
 
   useEffect(() => {
-    const subscription = AppState.addEventListener(
-      "change",
-      handleAppStateChange
-    );
-    return () => subscription.remove();
-  }, []);
+    const fetchNotifications = async () => {
+      try {
+        const response = await axios.get(
+          "http://52.77.222.212/api/notifications",
+          {
+            params: { username: user?.username },
+          }
+        );
+        setNotifications(response.data.notifications);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    setNotifications(user?.notifications as Notification);
+    if (user?.username) {
+      fetchNotifications();
+    }
   }, [user]);
 
-  useEffect(() => {
-    if (
-      (user?.grabFoodToken && user?.grabFoodToken !== "") ||
-      (user?.shopeeFoodToken && user?.shopeeFoodToken !== "")
-    ) {
-      // if (appState === "active" || appState === "background") {
-      //   const interval = setInterval(checkOrders, 10000); // Kiểm tra mỗi 10 giây
-      //   checkOrders();
-      //   return () => clearInterval(interval);
-      // }
-    }
-  }, [appState]);
-
-  const handleAppStateChange = (nextAppState: AppStateStatus) => {
-    if (nextAppState === "active") {
-      setAppState(nextAppState);
-    }
-    if (nextAppState === "background") {
-      setAppState(nextAppState);
+  const handleNotificationPress = async (ID) => {
+    const order = orders.find((order) => order.ID === ID);
+    if (order) {
+      router.push({
+        pathname: "/screens/OrderDetail",
+        params: { info: JSON.stringify(order) },
+      });
+    } else {
+      console.error("Order not found");
     }
   };
 
-  const checkOrders = async () => {
-    const endTime = new Date().toISOString();
-    const startTime = new Date(
-      new Date().setDate(new Date().getDate() - 29)
-    ).toISOString();
-    const pageIndex = 0;
-    const pageSize = 100;
-    try {
-      const response = await axios.get(
-        "https://foodlink-api.onrender.com/check-orders",
-        {
-          params: {
-            startTime,
-            endTime,
-            pageIndex,
-            pageSize,
-            grabFoodToken: user?.grabFoodToken,
-            username: user?.username,
-          },
-        }
-      );
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
 
-      const { newOrders, updatedOrders } = response.data;
-
-      const newNotifications = [
-        ...newOrders.map((order: any) => ({
-          id: order.orderID,
-          title: "Đơn hàng mới",
-          message: `Bạn có đơn hàng mới.`,
-          time: new Date(order.createdAt).toLocaleTimeString(),
-          icon: require("../../assets/logo/grabfood-square.png"),
-          details: order,
-        })),
-        ...updatedOrders.map((order: any) => ({
-          id: order.orderID,
-          title: "Đơn hàng cập nhật",
-          message: `Đơn hàng #${order.displayID} đã được cập nhật.`,
-          time: new Date(order.updatedAt).toLocaleTimeString(),
-          icon: require("../../assets/logo/grabfood-square.png"),
-          details: order,
-        })),
-      ];
-
-      setNotifications((prevNotifications: any) => [
-        ...newNotifications,
-        ...prevNotifications,
-      ]);
-
-      // Gửi thông báo cho các đơn hàng mới
-      for (const order of newOrders) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Đơn hàng mới",
-            body: `Bạn có đơn hàng mới - ${order.displayID}`,
-          },
-          trigger: null,
-        });
-      }
-
-      // Gửi thông báo cho các đơn hàng được cập nhật
-      for (const order of updatedOrders) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Đơn hàng cập nhật",
-            body: `Đơn hàng #${order.displayID} đã được cập nhật.`,
-          },
-          trigger: null,
-        });
-      }
-    } catch (error) {
-      console.error("Error checking orders:", error);
-      //Alert.alert("Error", "Failed to check orders.");
-    }
-  };
-
-  const handleOrderPress = (order: Order) => {
-    router.push({
-      pathname: "/screens/OrderDetail",
-      params: { info: JSON.stringify(order) },
-    });
-  };
+  if (error) {
+    return <Text>Error fetching notifications: {error}</Text>;
+  }
 
   const renderNotificationItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      //style={styles.notificationCard}
-      onPress={() => {
-        if (item.details) handleOrderPress(item.details);
-        else return;
-      }}
-    >
+    <TouchableOpacity onPress={() => handleNotificationPress(item.ID)}>
       <View style={styles.notificationCard}>
         {item.type === "system" ? (
           <Image

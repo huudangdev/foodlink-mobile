@@ -1,7 +1,7 @@
 import axios from "axios";
 //import { URL_DEVELOPMENT } from "@env";
 
-const API_BASE_URL = "https://foodlink-api.onrender.com";
+const API_BASE_URL = "http://52.77.222.212";
 
 function removeVietnameseTones(str: any) {
   return str
@@ -33,6 +33,21 @@ export const savePrinterToDB = async (
     throw error;
   }
 };
+
+export const updatePrinter = async (printerId, updatedInfo) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/api/update-printer/${printerId}`,
+      updatedInfo
+    );
+    console.log(response.data.message);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating printer:", error);
+    throw error;
+  }
+};
+
 export const getHtmlContent = (order: any, printOption: any, platform: any) => {
   let title = "";
   let text = "";
@@ -49,9 +64,7 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
 
     if (option === "customer") {
       // Tiêu đề
-      text += "GrabFood\n - Khách hàng";
-      text +=
-        "------------------------------------------------------------------------------------------\n";
+      text += "GrabFood\n";
       text += `Order ID: ${order.displayID}\n\n`;
 
       // Thông tin đơn hàng
@@ -60,14 +73,14 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
         order.times.acceptedAt
       ).toLocaleString()}\n`;
       text += "Đơn của ***\n\n";
-
+      
       // Số món
-      text += `${order.itemInfo.count} món\n`;
+      text += `------------------------------- ${order.itemInfo.count} món --------------------------\n`;
       text += "✔ Cần dụng cụ ăn uốn\n";
       text +=
-        "Đối với những món đã hết, vui lòng xem ghi chú của khách hàng trên ứng dụng\n\n";
+        "* Đối với những món đã hết, vui lòng xem ghi chú của khách hàng trên ứng dụng\n\n";
       // Danh sách món ăn
-      text += "------------------------------\n";
+      text += "--------------------------------------------------------------------------------------\n";
       order.itemInfo.items.forEach((item) => {
         text += `${item.quantity} x ${item.name}        ${item.fare.priceDisplay}\n`;
         item.modifierGroups.forEach((group) => {
@@ -82,9 +95,7 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
         "------------------------------------------------------------------------------------------\n";
       text += `Tổng (tạm tính):       ${order.fare.totalDisplay}\n`;
       text += `Tổng cộng:             ${order.fare.totalDisplay}\n`;
-      text +=
-        "------------------------------------------------------------------------------------------\n";
-
+      text += `------------------------------- ${order.displayID} --------------------------\n`;
       // Thông tin thêm
       text += `${order.displayID}\n`;
       text += `${order.merchant.ID}\n`;

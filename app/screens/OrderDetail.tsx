@@ -272,6 +272,8 @@ const OrderDetailsScreen = () => {
 
   useEffect(() => {
     const orderID = JSON.parse(info).ID;
+
+    console.log('ID: ', orderID)
     const fetchOrderDetails = async () => {
       try {
         const orderData = await getOrderDetails(
@@ -288,7 +290,7 @@ const OrderDetailsScreen = () => {
       }
     };
 
-    //console.log("Order detail:", order);
+    console.log("Order detail:", order);
 
     fetchOrderDetails();
   }, [info]);
@@ -326,7 +328,7 @@ const OrderDetailsScreen = () => {
 
       const uri = await viewShotRef.current.capture();
 
-      console.log("Captured Image thành công:", uri);
+      console.log("Captured Image thành công:", uri, printerIp);
 
       // Chờ 1 giây trước khi đọc file (tránh lỗi "image not found")
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -430,13 +432,8 @@ const OrderDetailsScreen = () => {
       image: any;
     };
   }) => {
-    //console.log("Item:", item);
     return (
       <View style={styles.itemContainer} key={item.name}>
-        {/* <Image
-        source={require("../../assets/images/example-item.png")}
-        style={styles.itemImage}
-      /> */}
         <View style={styles.itemDetails}>
           <Text style={styles.itemName}>{item.name}</Text>
           <Text style={styles.itemQuantity}>x{item.quantity}</Text>
@@ -485,8 +482,10 @@ const OrderDetailsScreen = () => {
                 Alert.alert("Lỗi", "Không có số điện thoại để gọi");
               }
             }}
+            style={styles.callButton}
           >
-            <Icon name="call" size={20} color="#555" />
+            <Icon name="call" size={16} color="#555" />
+            <Text> Call </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -601,7 +600,7 @@ const OrderDetailsScreen = () => {
           />
           <TouchableOpacity
             style={styles.printButtonCustom}
-            onPress={handlePrint}
+            onPress={() => handlePrint()}
           >
             <Text style={styles.printButtonText}>In</Text>
           </TouchableOpacity>
@@ -788,6 +787,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 12,
+  },
+  callButton: {
+    flexDirection: "row",
+    marginLeft: 8, // Khoảng cách giữa tên khách hàng và nút gọi
+    padding: 8, // Thêm padding cho nút
+    borderRadius: 5, // Bo tròn góc
+    backgroundColor: "#f0f0f0", // Màu nền cho nút
+    alignItems: "center", // Căn giữa icon
+    justifyContent: "center", // Căn giữa icon
   },
   printButtonCustom: {
     backgroundColor: "#FFA000", // Màu cam chủ đạo
