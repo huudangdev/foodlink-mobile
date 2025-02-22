@@ -267,8 +267,6 @@ const OrderDetailsScreen = () => {
 
   const data = JSON.parse(info);
 
-  //console.log("Order data:", order);
-
   useEffect(() => {
     const orderID = JSON.parse(info).ID;
 
@@ -280,7 +278,6 @@ const OrderDetailsScreen = () => {
           user?.grabFoodToken || ""
           //user?.storeInfo?.data?
         );
-        //console.log("Order data:", orderData);
         setOrder(orderData.orderData);
       } catch (error) {
         setError(error);
@@ -288,8 +285,6 @@ const OrderDetailsScreen = () => {
         setLoading(false);
       }
     };
-
-    console.log("Order detail:", order);
 
     fetchOrderDetails();
   }, [info]);
@@ -335,25 +330,20 @@ const OrderDetailsScreen = () => {
       // Đọc file ảnh và chuyển sang Base64
       const formattedUri = uri.replace("file://", "");
 
-      //   const exists = await RNFS.exists(formattedUri);
-      //   if (!exists) {
-      //     console.error("Error: Image file not found!");
-      //     return;
-      //   }
-
       const base64Image = await RNFS.readFile(formattedUri, "base64");
-      //console.log("Base64 Image:", base64Image);
-      //const finalImage = `data:image/png;base64,${base64Image}`;
 
       await NetPrinter.init();
       await NetPrinter.connectPrinter(printerIp, 9100);
 
       // In ảnh dưới dạng Base64 thay vì URI
       await NetPrinter.printImageBase64(base64Image, {
-        imageWidth: 384, // thay đổi để phù hợp khổ in 58
+        imageWidth: 584, // thay đổi để phù hợp khổ in 58
         // imageHeight: 1000,
         // paddingX: 100
       });
+
+      // Đảm bảo ngắt kết nối sau in
+      await NetPrinter.closeConn();
     } catch (error) {
       console.error("Error printing bitmap:", error);
     }
@@ -367,21 +357,27 @@ const OrderDetailsScreen = () => {
       switch (printType) {
         case "customer":
           htmlContent = getHtmlContent(order, "customer", "grabfood");
+          await printBitmapOrder(htmlContent, selectedPrinter);
           break;
         case "restaurant":
           htmlContent = getHtmlContent(order, "restaurant", "grabfood");
+          await printBitmapOrder(htmlContent, selectedPrinter);
           break;
         case "kitchen":
           htmlContent = getHtmlContent(order, "kitchen", "grabfood");
+          await printBitmapOrder(htmlContent, selectedPrinter);
           break;
         case "label":
-          htmlContent = getLabelHtmlContent(order);
+          order?.itemInfo?.items.map(async (item: any) => {
+            for (let i = 1; i <= item.quantity; i++) {
+              htmlContent = getLabelHtmlContent(item);
+              await printBitmapOrder(htmlContent, selectedPrinter);
+            }
+          });
           break;
         default:
           throw new Error("Invalid print type");
       }
-
-      await printBitmapOrder(htmlContent, selectedPrinter);
     } catch (error) {
       console.error("Error printing order details:", error);
     }
@@ -581,8 +577,8 @@ const OrderDetailsScreen = () => {
           <RNPickerSelect
             onValueChange={(value) => setPrintOption(value)}
             items={[
-              { label: "In bill cho khách", value: "customer" },
-              { label: "In bill cho quán", value: "kitchen" },
+              { label: "In bill cho quán", value: "restaurant" },
+              { label: "In bill cho bếp", value: "kitchen" },
               { label: "In nhãn", value: "label" },
             ]}
             placeholder={{ label: "Chọn loại In", value: null }}
@@ -715,7 +711,7 @@ const OrderDetailsScreen = () => {
         )}
       <ViewShot
         ref={viewShotRef}
-        options={{ format: "png", quality: 1.0, width: 384 }}
+        options={{ format: "png", quality: 1.0, width: 584 }}
         style={{
           position: "absolute", // Ẩn khỏi UI
           top: -1000,
@@ -725,7 +721,7 @@ const OrderDetailsScreen = () => {
           backgroundColor: "white",
         }}
       >
-        <View style={{ padding: 5, width: 384 }}>
+        <View style={{ padding: 5, width: 584 }}>
           <Text
             style={{
               fontSize: 18,

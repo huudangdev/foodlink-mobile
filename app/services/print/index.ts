@@ -54,9 +54,6 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
 
   let option = "";
 
-  const CUT_PAPER = "\x1B\x69";
-  //console.log("Order to Template:", order);
-
   if (platform === "grabfood") {
     if (!printOption) {
       printOption = "customer";
@@ -65,44 +62,44 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
     if (option === "customer") {
       // Tiêu đề
       text += "GrabFood\n";
-      text += `Order ID: ${order.displayID}\n\n`;
+      text += `Order ID: ${order.displayID}\n`;
 
       // Thông tin đơn hàng
       text += "***** Sao chép (2) *****\n";
       text += `Lấy đơn lúc: ${new Date(
         order.times.acceptedAt
       ).toLocaleString()}\n`;
-      text += "Đơn của ***\n\n";
+      text += "Đơn của ***\n";
 
       // Số món
-      text += `------------------------------- ${order.itemInfo.count} món --------------------------\n`;
+      text += `------------------------------------------- ${order.itemInfo.count} món -----------------------------------------------------\n`;
       text += "✔ Cần dụng cụ ăn uốn\n";
       text +=
-        "* Đối với những món đã hết, vui lòng xem ghi chú của khách hàng trên ứng dụng\n\n";
+        "* Đối với những món đã hết, vui lòng xem ghi chú của khách hàng trên ứng dụng\n";
       // Danh sách món ăn
       text +=
-        "--------------------------------------------------------------------------------------\n";
+        "------------------------------------------------------------------------------------------------------------\n";
       order.itemInfo.items.forEach((item) => {
-        text += `${item.quantity} x ${item.name}        ${item.fare.priceDisplay}\n`;
+        text += `${item.quantity} x ${item.name}                                            ${item.fare.priceDisplay}\n`;
         item.modifierGroups.forEach((group) => {
           group.modifiers.forEach((modifier) => {
-            text += `  - ${modifier.modifierName}       ${modifier.priceDisplay}\n`;
+            text += `  - ${modifier.modifierName}                                            ${modifier.priceDisplay}\n`;
           });
         });
       });
 
       // Tổng tiền
       text +=
-        "------------------------------------------------------------------------------------------\n";
-      text += `Tổng (tạm tính):       ${order.fare.totalDisplay}\n`;
-      text += `Tổng cộng:             ${order.fare.totalDisplay}\n`;
-      text += `------------------------------- ${order.displayID} --------------------------\n`;
+        "------------------------------------------------------------------------------------------------------------\n";
+      text += `Tổng (tạm tính):                                                            ${order.fare.totalDisplay}\n`;
+      text += `Tổng cộng:                                                                  ${order.fare.totalDisplay}\n`;
+      text += `------------------------------------------ ${order.displayID} ---------------------------------------------------\n`;
       // Thông tin thêm
       text += `${order.displayID}\n`;
       text += `${order.merchant.ID}\n`;
       text += `Đã đặt lúc: ${new Date(
         order.times.createdAt
-      ).toLocaleString()}\n\n`;
+      ).toLocaleString()}\n`;
 
       // Ghi chú
       text +=
@@ -111,10 +108,8 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
     }
     if (option === "restaurant") {
       // Tiêu đề
-      text += "GrabFood\n - Quán";
-      text +=
-        "------------------------------------------------------------------------------------------\n";
-      text += `Order ID: ${order.displayID}\n\n`;
+      text += "GrabFood\n";
+      text += `Order ID: ${order.displayID}\n`;
 
       // // Thông tin đơn hàng
       text += `Lấy đơn lúc: ${new Date(
@@ -122,14 +117,12 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
       ).toLocaleString()}\n`;
       text += "Đơn của: ***\n";
       text += "Khách hàng: ***\n";
-      text +=
-        "------------------------------------------------------------------------------------------\n";
 
       // Số món
-      text += `${order.itemInfo.count} món\n`;
+      text += `------------------------------------------- ${order.itemInfo.count} món -----------------------------------------------------\n`;
       text += "- Cần dụng cụ ăn uống\n";
       text +=
-        "- Đối với những món đã hết, vui lòng xem ghi chú của khách hàng trên ứng dụng\n\n";
+        "- Đối với những món đã hết, vui lòng xem ghi chú của khách hàng trên ứng dụng\n";
 
       // Danh sách món ăn
       order.itemInfo.items.forEach((item) => {
@@ -146,27 +139,21 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
 
       // Tổng tiền
       text +=
-        "------------------------------------------------------------------------------------------\n";
-      text += `Tổng (tạm tính):       ${order.fare.totalDisplay}\n`;
-      text += `Tổng cộng:             ${order.fare.totalDisplay}\n`;
-      text +=
-        "------------------------------------------------------------------------------------------\n";
+        "------------------------------------------------------------------------------------------------------------\n";
+      text += `Tổng (tạm tính):                                                            ${order.fare.totalDisplay}\n`;
+      text += `Tổng cộng:                                                                  ${order.fare.totalDisplay}\n`;
+      text += `------------------------------------------ ${order.displayID} ---------------------------------------------------\n`;
 
       // Thông tin thêm
-      text +=
-        "------------------------------------------------------------------------------------------\n";
       text += `Đã đặt lúc: ${new Date(
         order.times.createdAt
       ).toLocaleString()}\n`;
       text += "Được giao bởi: ***\n";
-
-      //text += CUT_PAPER;
     }
     if (option === "kitchen") {
       // Tiêu đề
-      text += "GRABFOOD - BẾP\n";
-      text +=
-        "------------------------------------------------------------------------------------------\n";
+      text += "GRABFOOD\n";
+      text += `------------------------------------------- ${order.itemInfo.count} món -----------------------------------------------------\n`;
 
       // Danh sách món ăn
       order.itemInfo.items.forEach((item) => {
@@ -180,7 +167,7 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
           });
         });
         text +=
-          "------------------------------------------------------------------------------------------\n";
+          "------------------------------------------------------------------------------------------------------------\n";
       });
 
       //text += CUT_PAPER;
@@ -310,48 +297,31 @@ export const getHtmlContent = (order: any, printOption: any, platform: any) => {
   return text;
 };
 
-export const getLabelHtmlContent = (order: any) => {
-  const labels = order.itemInfo.items
-    .map((item: any) => {
-      return `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Nhãn món ăn</title>
-          <style>
-          body {
-          font-family: Arial, sans-serif;
-          margin: 10px;
-          padding: 10px;
-          border: 1px solid #000;
-          width: 200px;
-          height: 100px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          }
-          .item-name {
-          font-size: 14px;
-          font-weight: bold;
-          text-align: center;
-          }
-          .item-quantity {
-          font-size: 12px;
-          text-align: center;
-          }
-          </style>
-      </head>
-      <body>
-          <div class="item-name">${item.name}</div>
-          <div class="item-quantity">Số lượng: ${item.quantity}</div>
-      </body>
-      </html>
-        `;
-    })
-    .join("");
+export const getLabelHtmlContent = (item: any) => {
+  console.log("Item:", item);
+  let labelText = "";
 
-  return labels;
+  // Tiêu đề
+  labelText +=
+    "------------------------------------------------------------------------------------\n";
+
+  // Thông tin món
+  labelText += `🍽️ ${item.name.toUpperCase()}\n`;
+
+  // Ghi chú (nếu có)
+  if (item.comment) {
+    labelText += `🔹 Ghi chú: ${item.comment}\n`;
+  }
+
+  // Tùy chọn món (modifiers)
+  item.modifierGroups.forEach((group) => {
+    group.modifiers.forEach((modifier) => {
+      labelText += `➕ ${modifier.modifierName} (x${modifier.quantity})\n`;
+    });
+  });
+
+  labelText +=
+    "------------------------------------------------------------------------------------\n";
+
+  return labelText;
 };

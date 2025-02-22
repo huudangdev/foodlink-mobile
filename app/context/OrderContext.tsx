@@ -63,7 +63,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       await RNFS.moveFile(tempUri.replace("file://", ""), customUri);
       console.log("✅ File đã được lưu tại:", customUri);
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const base64Image = await RNFS.readFile(customUri, "base64");
 
@@ -71,12 +71,15 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       await NetPrinter.init();
       await NetPrinter.connectPrinter(printerIp, 9100);
 
-      await NetPrinter.printImageBase64(base64Image, { imageWidth: 384 });
+      await NetPrinter.printImageBase64(base64Image, { imageWidth: 584 });
 
       console.log(`✅ Đã in xong: ${text}`);
 
+      // Đảm bảo ngắt kết nối sau in
+      await NetPrinter.closeConn();
+
       // Xóa file sau khi in xong nếu cần
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await RNFS.unlink(customUri);
     } catch (error) {
       //console.error("❌ Error printing bitmap:", error);
@@ -96,21 +99,27 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       switch (printType) {
         case "customer":
           htmlContent = getHtmlContent(detailedOrder, "customer", "grabfood");
+          await printBitmapOrder(htmlContent, selectedPrinter);
           break;
         case "restaurant":
           htmlContent = getHtmlContent(detailedOrder, "restaurant", "grabfood");
+          await printBitmapOrder(htmlContent, selectedPrinter);
           break;
         case "kitchen":
           htmlContent = getHtmlContent(detailedOrder, "kitchen", "grabfood");
+          await printBitmapOrder(htmlContent, selectedPrinter);
           break;
         case "label":
-          htmlContent = getLabelHtmlContent(detailedOrder);
+          detailedOrder?.itemInfo?.items.map(async (item: any) => {
+            for (let i = 1; i <= item.quantity; i++) {
+              htmlContent = getLabelHtmlContent(item);
+              await printBitmapOrder(htmlContent, selectedPrinter);
+            }
+          });
           break;
         default:
           throw new Error("Invalid print type");
       }
-
-      await printBitmapOrder(htmlContent, selectedPrinter);
     } catch (error) {
       console.error("Error printing order details:", error);
     }
@@ -135,7 +144,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         return;
       } catch (error) {
         console.error(`❌ Lỗi in ${type}:`, error);
-        await new Promise((resolve) => setTimeout(resolve, 2000)); // Chờ trước khi thử lại
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Chờ trước khi thử lại
       }
     }
     console.error(`🚨 In thất bại sau ${retries} lần: ${type}`);
@@ -145,13 +154,10 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     await printOrderWithRetry(order, "customer", getIPPrinter("customer"));
     await printOrderWithRetry(order, "kitchen", getIPPrinter("kitchen"));
     await printOrderWithRetry(order, "restaurant", getIPPrinter("restaurant"));
-    await printOrderWithRetry(order, "label", getIPPrinter("label"));
+    await printOrder(order, "label", getIPPrinter("label"));
   };
 
   useEffect(() => {
-    //requestStoragePermission();
-    // Gọi hàm với IP máy in và URL ảnh
-
     const fetchOrders = async () => {
       setLoading(true);
       try {
@@ -195,12 +201,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
           0
         );
         setTotalRevenue(totalRev * 1000);
-
-        //response = await axios.get(
-        //  "http://52.77.222.212/shopeefood/orders"
-        //);
-        //const shopeeOrderData = response.data.orders;
-        //setShopeeOrders(shopeeOrderData);
 
         for (const order of newOrders) {
           if (!notifiedOrders.has(order.displayID)) {
@@ -253,6 +253,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
               ID: order.ID,
             });
             console.log("Notification saved to database");
+            //processPrintQueue(order);
           } catch (error) {
             console.error("Error saving notification:", error);
           }
@@ -280,7 +281,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       {children}
       <ViewShot
         ref={viewShotRef}
-        options={{ format: "png", quality: 1.0, width: 384 }}
+        options={{ format: "png", quality: 1.0, width: 584 }}
         style={{
           position: "absolute", // Ẩn khỏi UI
           top: -1000,
@@ -290,10 +291,10 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
           backgroundColor: "white",
         }}
       >
-        <View style={{ padding: 5, width: 384 }}>
+        <View style={{ padding: 5, width: 584 }}>
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 18,
               textAlign: "left",
               flexWrap: "wrap", // Cho phép text xuống dòng tự nhiên
               width: "100%", // Đảm bảo text không bị bóp
